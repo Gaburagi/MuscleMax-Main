@@ -1,0 +1,1070 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import '../utils/app_colors.dart';
+import '../providers/nutrition_provider.dart';
+import '../models/nutrition_model.dart';
+import '../utils/routes.dart';
+
+class NutritionScreen extends StatelessWidget {
+  const NutritionScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundDark,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppColors.backgroundGradient,
+        ),
+        child: SafeArea(
+          child: Consumer<NutritionProvider>(
+            builder: (context, provider, _) {
+              final nutrition = provider.todayNutrition;
+              
+              if (nutrition == null) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.primaryRed),
+                );
+              }
+
+              return Column(
+                children: [
+                  _buildHeader(context),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.all(20),
+                      children: [
+                        _buildCalorieCard(nutrition),
+                        const SizedBox(height: 16),
+                        _buildMacrosCard(nutrition),
+                        const SizedBox(height: 16),
+                        _buildWaterCard(nutrition, provider),
+                        const SizedBox(height: 24),
+                        _buildMealsHeader(context, provider),
+                        const SizedBox(height: 12),
+                        _buildMealsList(provider),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+      bottomNavigationBar: _BottomNav(currentIndex: 4),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Text(
+        'NUTRITION',
+        style: TextStyle(
+          color: AppColors.textWhite,
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.5,
+          fontFamily: 'BebasNeue',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCalorieCard(DailyNutrition nutrition) {
+    final progress = nutrition.caloriesProgress;
+    final consumed = nutrition.totalCalories.toInt();
+    final goal = nutrition.goals.calorieGoal;
+    final remaining = (goal - consumed).clamp(0, goal);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'CALORIES',
+            style: TextStyle(
+              color: AppColors.textGray,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '$consumed',
+            style: TextStyle(
+              color: AppColors.primaryRed,
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            'of $goal kcal',
+            style: TextStyle(
+              color: AppColors.textGray,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              backgroundColor: AppColors.backgroundDark,
+              valueColor: AlwaysStoppedAnimation(AppColors.primaryRed),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$remaining kcal remaining',
+            style: TextStyle(
+              color: AppColors.textWhite,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMacrosCard(DailyNutrition nutrition) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'MACROS',
+            style: TextStyle(
+              color: AppColors.textGray,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildMacroRow('Protein', nutrition.totalProtein, nutrition.goals.proteinGoal, Colors.blue),
+          const SizedBox(height: 12),
+          _buildMacroRow('Carbs', nutrition.totalCarbs, nutrition.goals.carbsGoal, Colors.orange),
+          const SizedBox(height: 12),
+          _buildMacroRow('Fat', nutrition.totalFat, nutrition.goals.fatGoal, Colors.purple),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMacroRow(String name, double current, double goal, Color color) {
+    final progress = (current / goal).clamp(0.0, 1.0);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              name,
+              style: TextStyle(color: AppColors.textWhite, fontSize: 14),
+            ),
+            Text(
+              '${current.toInt()}g / ${goal.toInt()}g',
+              style: TextStyle(color: AppColors.textGray, fontSize: 12),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            backgroundColor: AppColors.backgroundDark,
+            valueColor: AlwaysStoppedAnimation(color),
+            minHeight: 6,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWaterCard(DailyNutrition nutrition, NutritionProvider provider) {
+    final glasses = (nutrition.waterIntake / 250).floor();
+    final goal = (nutrition.goals.waterGoal / 250).floor();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.local_drink, color: Colors.lightBlue, size: 32),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Water Intake',
+                  style: TextStyle(color: AppColors.textWhite, fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$glasses / $goal glasses (${nutrition.waterIntake}ml)',
+                  style: TextStyle(color: AppColors.textGray, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => provider.addWaterIntake(250),
+            icon: Icon(Icons.add_circle, color: AppColors.primaryRed, size: 32),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMealsHeader(BuildContext context, NutritionProvider provider) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          'MEALS',
+          style: TextStyle(
+            color: AppColors.textWhite,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            fontFamily: 'BebasNeue',
+          ),
+        ),
+        TextButton(
+          onPressed: () => _showAddMealDialog(context, provider),
+          style: TextButton.styleFrom(
+            backgroundColor: AppColors.primaryRed,
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          ),
+          child: Text('ADD', style: TextStyle(color: AppColors.textWhite)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMealsList(NutritionProvider provider) {
+    final mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+    final mealTitles = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+
+    return Column(
+      children: List.generate(mealTypes.length, (index) {
+        final meals = provider.getMealsByType(mealTypes[index]);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildMealCard(mealTitles[index], meals, provider),
+        );
+      }),
+    );
+  }
+
+  Widget _buildMealCard(String title, List<Meal> meals, NutritionProvider provider) {
+    final totalCals = meals.fold<double>(0, (sum, m) => sum + m.totalCalories);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: AppColors.textWhite,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (totalCals > 0)
+                Text(
+                  '${totalCals.toInt()} kcal',
+                  style: TextStyle(
+                    color: AppColors.primaryRed,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+            ],
+          ),
+          if (meals.isEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'No meals added',
+              style: TextStyle(color: AppColors.textGray, fontSize: 12),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            ...meals.map((meal) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meal.name,
+                          style: TextStyle(color: AppColors.textWhite, fontSize: 14),
+                        ),
+                        Text(
+                          '${meal.totalCalories.toInt()} kcal • ${meal.totalProtein.toInt()}g protein',
+                          style: TextStyle(color: AppColors.textGray, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => provider.removeMeal(meal.id),
+                    icon: Icon(Icons.delete_outline, color: AppColors.accentRed, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints(),
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showAddMealDialog(BuildContext context, NutritionProvider provider) {
+    final progress = (nutrition.caloriesProgress * 100).clamp(0, 100).toInt();
+    final remaining = (nutrition.goals.calorieGoal - nutrition.totalCalories).toInt();
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 160,
+                height: 160,
+                child: CircularProgressIndicator(
+                  value: nutrition.caloriesProgress.clamp(0.0, 1.0),
+                  strokeWidth: 12,
+                  backgroundColor: AppColors.textGray.withOpacity(0.2),
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${nutrition.totalCalories.toInt()}',
+                    style: const TextStyle(
+                      color: AppColors.textWhite,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'BebasNeue',
+                    ),
+                  ),
+                  Text(
+                    'of ${nutrition.goals.calorieGoal.toInt()} kcal',
+                    style: TextStyle(
+                      color: AppColors.textGray.withOpacity(0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            remaining > 0 ? '$remaining kcal remaining' : 'Goal reached!',
+            style: TextStyle(
+              color: remaining > 0 ? AppColors.textGray : AppColors.primaryRed,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMacrosSection(DailyNutrition nutrition) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'MACROS',
+          style: TextStyle(
+            color: AppColors.textWhite,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            fontFamily: 'BebasNeue',
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildMacroBar(
+          'Protein',
+          nutrition.totalProtein,
+          nutrition.goals.proteinGoal,
+          Colors.blue,
+        ),
+        const SizedBox(height: 12),
+        _buildMacroBar(
+          'Carbs',
+          nutrition.totalCarbs,
+          nutrition.goals.carbsGoal,
+          Colors.orange,
+        ),
+        const SizedBox(height: 12),
+        _buildMacroBar(
+          'Fat',
+          nutrition.totalFat,
+          nutrition.goals.fatGoal,
+          Colors.purple,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMacroBar(String name, double current, double goal, Color color) {
+    final progress = (current / goal).clamp(0.0, 1.0);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              name,
+              style: const TextStyle(
+                color: AppColors.textWhite,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Text(
+              '${current.toInt()}g / ${goal.toInt()}g',
+              style: TextStyle(
+                color: AppColors.textGray.withOpacity(0.7),
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
+            backgroundColor: AppColors.textGray.withOpacity(0.2),
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWaterSection(BuildContext context, DailyNutrition nutrition, NutritionProvider provider) {
+    final glasses = (nutrition.waterIntake / 250).floor();
+    final totalGlasses = (nutrition.goals.waterGoal / 250).ceil();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.local_drink,
+            color: Colors.lightBlue.withOpacity(0.8),
+            size: 32,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Water Intake',
+                  style: TextStyle(
+                    color: AppColors.textWhite,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$glasses / $totalGlasses glasses (${nutrition.waterIntake}ml)',
+                  style: TextStyle(
+                    color: AppColors.textGray.withOpacity(0.7),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              provider.addWaterIntake(250);
+            },
+            icon: const Icon(Icons.add_circle, color: Colors.lightBlue),
+            iconSize: 32,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMealsSection(BuildContext context, DailyNutrition nutrition, NutritionProvider provider) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'MEALS',
+              style: TextStyle(
+                color: AppColors.textWhite,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+                fontFamily: 'BebasNeue',
+              ),
+            ),
+            SizedBox(
+              height: 36,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  _showAddMealDialog(context, provider);
+                },
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('ADD'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryRed,
+                  foregroundColor: AppColors.textWhite,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _buildMealCard('Breakfast', provider.getMealsByType('breakfast'), provider),
+        const SizedBox(height: 12),
+        _buildMealCard('Lunch', provider.getMealsByType('lunch'), provider),
+        const SizedBox(height: 12),
+        _buildMealCard('Dinner', provider.getMealsByType('dinner'), provider),
+        const SizedBox(height: 12),
+        _buildMealCard('Snacks', provider.getMealsByType('snack'), provider),
+      ],
+    );
+  }
+
+  Widget _buildMealCard(String mealType, List<Meal> meals, NutritionProvider provider) {
+    final totalCalories = meals.fold<double>(0, (sum, meal) => sum + meal.totalCalories);
+    final totalProtein = meals.fold<double>(0, (sum, meal) => sum + meal.totalProtein);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                mealType,
+                style: const TextStyle(
+                  color: AppColors.textWhite,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (meals.isNotEmpty)
+                Text(
+                  '${totalCalories.toInt()} kcal',
+                  style: TextStyle(
+                    color: AppColors.textGray.withOpacity(0.7),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
+          ),
+          if (meals.isEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'No meals added',
+              style: TextStyle(
+                color: AppColors.textGray.withOpacity(0.5),
+                fontSize: 12,
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 12),
+            ...meals.map((meal) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meal.name,
+                          style: const TextStyle(
+                            color: AppColors.textWhite,
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          '${meal.totalCalories.toInt()} kcal • ${meal.totalProtein.toInt()}g protein',
+                          style: TextStyle(
+                            color: AppColors.textGray.withOpacity(0.6),
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                    onPressed: () {
+                      provider.removeMeal(meal.id);
+                    },
+                  ),
+                ],
+              ),
+            )),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showAddMealDialog(BuildContext context, NutritionProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddMealDialog(provider: provider),
+    );
+  }
+}
+
+class _AddMealDialog extends StatefulWidget {
+  final NutritionProvider provider;
+
+  const _AddMealDialog({required this.provider});
+
+  @override
+  State<_AddMealDialog> createState() => _AddMealDialogState();
+}
+
+class _AddMealDialogState extends State<_AddMealDialog> {
+  String selectedMealType = 'breakfast';
+  Food? selectedFood;
+  double servings = 1.0;
+  final _mealNameController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppColors.backgroundCard,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Add Meal',
+                style: TextStyle(
+                  color: AppColors.textWhite,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'BebasNeue',
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Meal Type
+              const Text(
+                'Meal Type',
+                style: TextStyle(color: AppColors.textGray, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: selectedMealType,
+                dropdownColor: AppColors.backgroundCard,
+                style: const TextStyle(color: AppColors.textWhite),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColors.backgroundDark,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                items: ['breakfast', 'lunch', 'dinner', 'snack']
+                    .map((type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(type.toUpperCase()),
+                        ))
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedMealType = value!;
+                  });
+                },
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Meal Name
+              const Text(
+                'Meal Name',
+                style: TextStyle(color: AppColors.textGray, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _mealNameController,
+                style: const TextStyle(color: AppColors.textWhite),
+                decoration: InputDecoration(
+                  hintText: 'e.g., Grilled Chicken Salad',
+                  hintStyle: TextStyle(color: AppColors.textGray.withOpacity(0.5)),
+                  filled: true,
+                  fillColor: AppColors.backgroundDark,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Food Selection
+              const Text(
+                'Select Food',
+                style: TextStyle(color: AppColors.textGray, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 200),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: widget.provider.commonFoods.length,
+                  itemBuilder: (context, index) {
+                    final food = widget.provider.commonFoods[index];
+                    final isSelected = selectedFood?.id == food.id;
+                    
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedFood = food;
+                        });
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.primaryRed.withOpacity(0.2) : AppColors.backgroundDark,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected ? AppColors.primaryRed : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              food.name,
+                              style: const TextStyle(
+                                color: AppColors.textWhite,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              '${food.calories.toInt()} kcal',
+                              style: TextStyle(
+                                color: AppColors.textGray.withOpacity(0.7),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              
+              if (selectedFood != null) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Servings',
+                  style: TextStyle(color: AppColors.textGray, fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          if (servings > 0.5) servings -= 0.5;
+                        });
+                      },
+                      icon: const Icon(Icons.remove_circle_outline, color: AppColors.textWhite),
+                    ),
+                    Text(
+                      servings.toString(),
+                      style: const TextStyle(
+                        color: AppColors.textWhite,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          servings += 0.5;
+                        });
+                      },
+                      icon: const Icon(Icons.add_circle_outline, color: AppColors.textWhite),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundDark,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Total Nutrition',
+                        style: TextStyle(
+                          color: AppColors.textGray.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${(selectedFood!.calories * servings).toInt()} kcal',
+                        style: const TextStyle(
+                          color: AppColors.textWhite,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        'P: ${(selectedFood!.protein * servings).toInt()}g • C: ${(selectedFood!.carbs * servings).toInt()}g • F: ${(selectedFood!.fat * servings).toInt()}g',
+                        style: TextStyle(
+                          color: AppColors.textGray.withOpacity(0.7),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              
+              const SizedBox(height: 20),
+              
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: selectedFood == null || _mealNameController.text.isEmpty
+                          ? null
+                          : () {
+                              final meal = Meal(
+                                id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                name: _mealNameController.text,
+                                type: selectedMealType,
+                                dateTime: DateTime.now(),
+                                foods: [
+                                  FoodEntry(
+                                    food: selectedFood!,
+                                    servings: servings,
+                                  ),
+                                ],
+                              );
+                              widget.provider.addMeal(meal);
+                              Navigator.pop(context);
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryRed,
+                        foregroundColor: AppColors.textWhite,
+                      ),
+                      child: const Text('Add Meal'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _mealNameController.dispose();
+    super.dispose();
+  }
+}
+
+class _BottomNav extends StatelessWidget {
+  final int currentIndex;
+
+  const _BottomNav({required this.currentIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _NavItem(
+                icon: Icons.home,
+                label: 'Home',
+                isSelected: currentIndex == 0,
+                onTap: () => context.go('/home'),
+              ),
+              _NavItem(
+                icon: Icons.fitness_center,
+                label: 'Training',
+                isSelected: currentIndex == 1,
+                onTap: () => context.go('/training'),
+              ),
+              _NavItem(
+                icon: Icons.bar_chart,
+                label: 'Progress',
+                isSelected: currentIndex == 2,
+                onTap: () => context.go('/progress'),
+              ),
+              _NavItem(
+                icon: Icons.person,
+                label: 'Profile',
+                isSelected: currentIndex == 3,
+                onTap: () => context.go('/profile'),
+              ),
+              _NavItem(
+                icon: Icons.restaurant,
+                label: 'Nutrition',
+                isSelected: currentIndex == 4,
+                onTap: () => context.go('/nutrition'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: isSelected ? AppColors.primaryRed : AppColors.textGray,
+            size: 24,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? AppColors.primaryRed : AppColors.textGray,
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
