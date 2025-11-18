@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../screens/splash_screen.dart';
 import '../screens/onboarding_screen.dart';
@@ -21,6 +22,9 @@ import '../screens/active_custom_workout_screen.dart';
 import '../screens/workout_history_screen.dart';
 import '../screens/community_screen.dart';
 import '../screens/friends_screen.dart';
+
+// Track last navigation index for smooth transitions
+int _lastNavIndex = 0;
 
 class AppRoutes {
   static const String splash = '/';
@@ -82,23 +86,43 @@ class AppRoutes {
       ),
       GoRoute(
         path: home,
-        builder: (context, state) => const HomeScreen(),
+        pageBuilder: (context, state) => _buildPageWithSlideTransition(
+          state,
+          const HomeScreen(),
+          0,
+        ),
       ),
       GoRoute(
         path: training,
-        builder: (context, state) => const TrainingScreen(),
+        pageBuilder: (context, state) => _buildPageWithSlideTransition(
+          state,
+          const TrainingScreen(),
+          1,
+        ),
       ),
       GoRoute(
         path: profile,
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) => _buildPageWithSlideTransition(
+          state,
+          const ProfileScreen(),
+          3,
+        ),
       ),
       GoRoute(
         path: progress,
-        builder: (context, state) => const ProgressScreen(),
+        pageBuilder: (context, state) => _buildPageWithSlideTransition(
+          state,
+          const ProgressScreen(),
+          2,
+        ),
       ),
       GoRoute(
         path: nutrition,
-        builder: (context, state) => const NutritionScreen(),
+        pageBuilder: (context, state) => _buildPageWithSlideTransition(
+          state,
+          const NutritionScreen(),
+          4,
+        ),
       ),
       GoRoute(
         path: workoutDetail,
@@ -155,4 +179,36 @@ class AppRoutes {
       ),
     ],
   );
+
+  // Build page with slide transition based on navigation direction
+  static CustomTransitionPage _buildPageWithSlideTransition(
+    GoRouterState state,
+    Widget child,
+    int targetIndex,
+  ) {
+    final isMovingRight = targetIndex > _lastNavIndex;
+    _lastNavIndex = targetIndex;
+
+    return CustomTransitionPage(
+      key: state.pageKey,
+      child: child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        // Determine slide direction based on navigation
+        final slideBegin = isMovingRight ? begin : const Offset(-1.0, 0.0);
+        
+        var tween = Tween(begin: slideBegin, end: end).chain(
+          CurveTween(curve: curve),
+        );
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
+    );
+  }
 }
