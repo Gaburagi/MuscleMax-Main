@@ -93,14 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1D1E2C),
-              Color(0xFF222831),
-            ],
-          ),
+          gradient: AppColors.backgroundGradient,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -238,11 +231,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: RichText(
                         text: TextSpan(
                           style: Theme.of(context).textTheme.bodyMedium,
-                          children: [
-                            const TextSpan(text: "Don't have an account? "),
+                          children: const [
+                            TextSpan(text: "Don't have an account? "),
                             TextSpan(
                               text: 'Register!',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: AppColors.primaryRed,
                                 fontWeight: FontWeight.w600,
                               ),

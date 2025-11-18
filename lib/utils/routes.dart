@@ -19,6 +19,8 @@ import '../screens/workout_builder_screen.dart';
 import '../screens/workout_calendar_screen.dart';
 import '../screens/active_custom_workout_screen.dart';
 import '../screens/workout_history_screen.dart';
+import '../screens/community_screen.dart';
+import '../screens/friends_screen.dart';
 
 class AppRoutes {
   static const String splash = '/';
@@ -41,6 +43,8 @@ class AppRoutes {
   static const String workoutCalendar = '/workout-calendar';
   static const String activeCustomWorkout = '/active-custom-workout';
   static const String workoutHistory = '/workout-history';
+  static const String community = '/community';
+  static const String friends = '/friends';
   
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -140,6 +144,14 @@ class AppRoutes {
       GoRoute(
         path: workoutHistory,
         builder: (context, state) => const WorkoutHistoryScreen(),
+      ),
+      GoRoute(
+        path: community,
+        builder: (context, state) => const CommunityScreen(),
+      ),
+      GoRoute(
+        path: friends,
+        builder: (context, state) => const FriendsScreen(),
       ),
     ],
   );

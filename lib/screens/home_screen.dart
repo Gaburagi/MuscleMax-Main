@@ -17,7 +17,7 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
         ),
         child: SafeArea(
@@ -100,6 +100,24 @@ class HomeScreen extends StatelessWidget {
                   onTap: () => context.go(AppRoutes.profile),
                 ),
 
+                const SizedBox(height: 12),
+                
+                _QuickActionButton(
+                  title: 'Community Hub',
+                  subtitle: 'Challenges, leaderboards & shared workouts',
+                  icon: Icons.people,
+                  onTap: () => context.go(AppRoutes.community),
+                ),
+
+                const SizedBox(height: 12),
+
+                _QuickActionButton(
+                  title: 'Friends',
+                  subtitle: 'Connect with friends & view their activity',
+                  icon: Icons.group,
+                  onTap: () => context.go(AppRoutes.friends),
+                ),
+
                 const SizedBox(height: 32),
 
                 // Today's Recommended
@@ -170,7 +188,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNav(currentIndex: 0),
+      bottomNavigationBar: const _BottomNav(currentIndex: 0),
     );
   }
 }

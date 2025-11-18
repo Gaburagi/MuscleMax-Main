@@ -7,6 +7,8 @@ import 'providers/user_provider.dart';
 import 'providers/workout_provider.dart';
 import 'providers/nutrition_provider.dart';
 import 'providers/custom_workout_provider.dart';
+import 'providers/community_provider.dart';
+import 'providers/friends_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,9 +24,14 @@ void main() {
   runApp(const MuscleMaxApp());
 }
 
-class MuscleMaxApp extends StatelessWidget {
+class MuscleMaxApp extends StatefulWidget {
   const MuscleMaxApp({super.key});
 
+  @override
+  State<MuscleMaxApp> createState() => _MuscleMaxAppState();
+}
+
+class _MuscleMaxAppState extends State<MuscleMaxApp> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -32,7 +39,15 @@ class MuscleMaxApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUser()),
         ChangeNotifierProvider(create: (_) => WorkoutProvider()),
         ChangeNotifierProvider(create: (_) => NutritionProvider()..loadNutritionData()),
-        ChangeNotifierProvider(create: (_) => CustomWorkoutProvider()..loadWorkouts()),
+        ChangeNotifierProvider(create: (_) => CommunityProvider()),
+        ChangeNotifierProvider(create: (_) => FriendsProvider()),
+        ChangeNotifierProxyProvider<CommunityProvider, CustomWorkoutProvider>(
+          create: (context) => CustomWorkoutProvider()..loadWorkouts(),
+          update: (context, communityProvider, customWorkoutProvider) {
+            customWorkoutProvider!.setCommunityProvider(communityProvider);
+            return customWorkoutProvider;
+          },
+        ),
       ],
       child: MaterialApp.router(
         title: 'MuscleMax',

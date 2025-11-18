@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/custom_workout_model.dart';
+import 'community_provider.dart';
 
 class WorkoutCompletionRecord {
   final String workoutId;
@@ -51,6 +52,11 @@ class CustomWorkoutProvider with ChangeNotifier {
   bool _isRestTimerActive = false;
   int _remainingRestTime = 0;
   DateTime? _workoutStartTime;
+  CommunityProvider? _communityProvider;
+
+  void setCommunityProvider(CommunityProvider provider) {
+    _communityProvider = provider;
+  }
 
   List<CustomWorkout> get customWorkouts => _customWorkouts;
   List<ScheduledWorkout> get scheduledWorkouts => _scheduledWorkouts;
@@ -254,6 +260,64 @@ class CustomWorkoutProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // Create a custom workout from shared workout data
+  Future<void> createWorkoutFromShared({
+    required String name,
+    required String description,
+    required String category,
+    required int exerciseCount,
+  }) async {
+    // For now, create a workout with placeholder exercises based on category
+    // In a real app, you'd fetch the actual exercise data from the server
+    final exercises = _generatePlaceholderExercises(category, exerciseCount);
+    
+    final workout = CustomWorkout(
+      id: 'workout_${DateTime.now().millisecondsSinceEpoch}',
+      name: '$name (Cloned)',
+      description: description,
+      exercises: exercises,
+      category: category,
+      estimatedDuration: exerciseCount * 5, // Rough estimate: 5 min per exercise
+      createdAt: DateTime.now(),
+    );
+    
+    await addCustomWorkout(workout);
+  }
+
+  List<WorkoutExercise> _generatePlaceholderExercises(String category, int count) {
+    // Filter templates by category
+    final categoryTemplates = _exerciseTemplates.where((template) {
+      if (category.toLowerCase() == 'strength') {
+        return template.category == 'strength';
+      } else if (category.toLowerCase() == 'cardio') {
+        return template.category == 'cardio';
+      }
+      return true; // Include all for mixed/other categories
+    }).toList();
+
+    if (categoryTemplates.isEmpty) {
+      categoryTemplates.addAll(_exerciseTemplates.take(5));
+    }
+
+    final exercises = <WorkoutExercise>[];
+    for (int i = 0; i < count && i < categoryTemplates.length; i++) {
+      final template = categoryTemplates[i % categoryTemplates.length];
+      exercises.add(
+        WorkoutExercise(
+          id: 'exercise_${DateTime.now().millisecondsSinceEpoch}_$i',
+          template: template,
+          sets: List.generate(
+            3,
+            (index) => CustomExerciseSet(reps: 12, weight: 20.0),
+          ),
+          restTime: 60,
+          orderIndex: i,
+        ),
+      );
+    }
+    return exercises;
+  }
+
   Future<void> updateCustomWorkout(CustomWorkout workout) async {
     final index = _customWorkouts.indexWhere((w) => w.id == workout.id);
     if (index != -1) {
@@ -315,6 +379,30 @@ class CustomWorkoutProvider with ChangeNotifier {
           timesPerformed: _customWorkouts[workoutIndex].timesPerformed + 1,
           lastPerformed: DateTime.now(),
         );
+      }
+      
+      // Add to completion history
+      final workout = _scheduledWorkouts[index].workout;
+      final completionRecord = WorkoutCompletionRecord(
+        workoutId: workout.id,
+        workoutName: workout.name,
+        category: workout.category,
+        completedAt: DateTime.now(),
+        durationMinutes: workout.estimatedDuration,
+        exerciseCount: workout.exercises.length,
+      );
+      _completionHistory.add(completionRecord);
+      await _saveCompletionHistory();
+      
+      // Check achievements
+      if (_communityProvider != null) {
+        await _communityProvider!.checkAchievements(
+          totalCompletedWorkouts,
+          getCurrentStreak(),
+        );
+        
+        // Update challenge progress
+        await _updateChallengeProgress();
       }
       
       await _saveWorkouts();
@@ -451,7 +539,42 @@ class CustomWorkoutProvider with ChangeNotifier {
 
     await _saveWorkouts();
     await _saveCompletionHistory();
+    
+    // Check and update achievements
+    if (_communityProvider != null) {
+      await _communityProvider!.checkAchievements(
+        totalCompletedWorkouts,
+        getCurrentStreak(),
+      );
+      
+      // Update challenge progress
+      await _updateChallengeProgress();
+    }
+    
     notifyListeners();
+  }
+
+  Future<void> _updateChallengeProgress() async {
+    if (_communityProvider == null) return;
+
+    final challenges = _communityProvider!.challenges;
+
+    // Update each joined challenge with relevant data for its period
+    for (final challenge in challenges) {
+      if (!challenge.isJoined) continue;
+
+      final stats = getWorkoutStatsForPeriod(challenge.startDate, challenge.endDate);
+      
+      await _communityProvider!.updateChallengesWithWorkoutData(
+        totalWorkoutsInPeriod: stats['totalWorkouts'],
+        totalExercisesInPeriod: stats['totalExercises'],
+        totalMinutesInPeriod: stats['totalMinutes'],
+        workoutDatesInPeriod: stats['workoutDates'],
+      );
+      
+      // Only need to calculate once for all challenges
+      break;
+    }
   }
 
   void cancelWorkout() {
@@ -474,4 +597,83 @@ class CustomWorkoutProvider with ChangeNotifier {
 
   List<CustomWorkout> getWorkoutsByCategory(String category) =>
       _customWorkouts.where((w) => w.category == category).toList();
+
+  // Statistics methods for achievements
+  int get totalCompletedWorkouts => _completionHistory.length;
+
+  int getCurrentStreak() {
+    if (_completionHistory.isEmpty) return 0;
+
+    final sortedHistory = List<WorkoutCompletionRecord>.from(_completionHistory)
+      ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+
+    int streak = 0;
+    DateTime? lastDate;
+
+    for (var record in sortedHistory) {
+      final recordDate = DateTime(
+        record.completedAt.year,
+        record.completedAt.month,
+        record.completedAt.day,
+      );
+
+      if (lastDate == null) {
+        // First record
+        final today = DateTime.now();
+        final todayDate = DateTime(today.year, today.month, today.day);
+        final yesterday = todayDate.subtract(const Duration(days: 1));
+        
+        // Only count if workout was today or yesterday
+        if (recordDate.isAtSameMomentAs(todayDate) || recordDate.isAtSameMomentAs(yesterday)) {
+          streak = 1;
+          lastDate = recordDate;
+        } else {
+          break; // Streak broken
+        }
+      } else {
+        final expectedDate = lastDate.subtract(const Duration(days: 1));
+        if (recordDate.isAtSameMomentAs(lastDate)) {
+          // Same day, skip
+          continue;
+        } else if (recordDate.isAtSameMomentAs(expectedDate)) {
+          // Consecutive day
+          streak++;
+          lastDate = recordDate;
+        } else {
+          // Streak broken
+          break;
+        }
+      }
+    }
+
+    return streak;
+  }
+
+  int get totalExercisesCompleted {
+    return _completionHistory.fold(0, (sum, record) => sum + record.exerciseCount);
+  }
+
+  int get totalWorkoutMinutes {
+    return _completionHistory.fold(0, (sum, record) => sum + record.durationMinutes);
+  }
+
+  // Get workout stats for a specific time period (for challenges)
+  Map<String, dynamic> getWorkoutStatsForPeriod(DateTime startDate, DateTime endDate) {
+    final workoutsInPeriod = _completionHistory.where((record) {
+      return record.completedAt.isAfter(startDate.subtract(const Duration(seconds: 1))) &&
+             record.completedAt.isBefore(endDate.add(const Duration(seconds: 1)));
+    }).toList();
+
+    final totalWorkouts = workoutsInPeriod.length;
+    final totalExercises = workoutsInPeriod.fold(0, (sum, record) => sum + record.exerciseCount);
+    final totalMinutes = workoutsInPeriod.fold(0, (sum, record) => sum + record.durationMinutes);
+    final workoutDates = workoutsInPeriod.map((record) => record.completedAt).toList();
+
+    return {
+      'totalWorkouts': totalWorkouts,
+      'totalExercises': totalExercises,
+      'totalMinutes': totalMinutes,
+      'workoutDates': workoutDates,
+    };
+  }
 }
