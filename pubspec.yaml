@@ -39,6 +39,9 @@ dependencies:
   pdf: ^3.11.3
   printing: ^5.14.2
   share_plus: ^12.0.1
+  
+  # Animations
+  confetti: ^0.7.0
 
 dev_dependencies:
   flutter_test:

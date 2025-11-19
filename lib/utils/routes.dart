@@ -26,6 +26,8 @@ import '../screens/body_measurements_screen.dart';
 import '../screens/personal_records_screen.dart';
 import '../screens/progress_photos_screen.dart';
 import '../screens/progress_reports_screen.dart';
+import '../screens/achievements_screen.dart';
+import '../screens/leaderboards_screen.dart';
 
 // Track last navigation index for smooth transitions
 int _lastNavIndex = 0;
@@ -196,6 +198,14 @@ class AppRoutes {
       GoRoute(
         path: '/progress-reports',
         builder: (context, state) => const ProgressReportsScreen(),
+      ),
+      GoRoute(
+        path: '/achievements',
+        builder: (context, state) => const AchievementsScreen(),
+      ),
+      GoRoute(
+        path: '/leaderboards',
+        builder: (context, state) => const LeaderboardsScreen(),
       ),
     ],
   );

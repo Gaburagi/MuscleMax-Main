@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/community_provider.dart';
 import '../providers/custom_workout_provider.dart';
+import '../providers/social_provider.dart';
 import '../models/community_models.dart';
+import '../models/social_model.dart' as social;
 import '../utils/app_colors.dart';
 
 class CommunityScreen extends StatefulWidget {
@@ -88,7 +90,7 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
             fontSize: 12,
           ),
           tabs: const [
-            Tab(text: 'SHARED'),
+            Tab(text: 'FEED'),
             Tab(text: 'CHALLENGES'),
             Tab(text: 'LEADERBOARD'),
             Tab(text: 'BADGES'),
@@ -98,9 +100,9 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
       body: TabBarView(
         controller: _tabController,
         children: [
-          _SharedWorkoutsTab(key: ValueKey('shared_$_currentTabIndex')),
+          _WorkoutFeedTab(key: ValueKey('feed_$_currentTabIndex')),
           _ChallengesTab(key: ValueKey('challenges_$_currentTabIndex')),
-          _LeaderboardTab(key: ValueKey('leaderboard_$_currentTabIndex')),
+          _NewLeaderboardTab(key: ValueKey('leaderboard_$_currentTabIndex')),
           _BadgesTab(key: ValueKey('badges_$_currentTabIndex')),
         ],
       ),
@@ -108,9 +110,300 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
   }
 }
 
+// Workout Feed Tab
+class _WorkoutFeedTab extends StatelessWidget {
+  const _WorkoutFeedTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final socialProvider = context.watch<SocialProvider>();
+    final feed = socialProvider.workoutFeed;
+
+    if (feed.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.fitness_center,
+              size: 80,
+              color: AppColors.textGray.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No workouts yet',
+              style: TextStyle(
+                color: AppColors.textGray,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Complete a workout to share with friends!',
+              style: TextStyle(
+                color: AppColors.textGray,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: feed.length,
+      itemBuilder: (context, index) {
+        final post = feed[index];
+        final isLiked = post.likedBy.contains(socialProvider.currentUserId);
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundCard,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: AppColors.primaryRed,
+                    child: Text(
+                      post.userName[0].toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          post.userName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          _formatTimestamp(post.timestamp),
+                          style: TextStyle(
+                            color: AppColors.textGray,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Workout name
+              Row(
+                children: [
+                  Icon(Icons.fitness_center, color: AppColors.primaryRed, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      post.workoutName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Stats
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  _buildStatChip(Icons.timer, '${post.durationMinutes} min', Colors.blue),
+                  _buildStatChip(Icons.fitness_center, '${post.exercisesCompleted} exercises', Colors.orange),
+                  if (post.caloriesBurned != null)
+                    _buildStatChip(Icons.local_fire_department, '${post.caloriesBurned} kcal', Colors.red),
+                  _buildStatChip(Icons.star, '+${post.xpGained} XP', Colors.amber),
+                ],
+              ),
+              // PRs
+              if (post.personalRecords.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.purple.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.emoji_events, color: Colors.purple, size: 16),
+                          SizedBox(width: 6),
+                          Text(
+                            'New PR!',
+                            style: TextStyle(
+                              color: Colors.purple,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ...post.personalRecords.map((pr) => Text(
+                            pr,
+                            style: const TextStyle(color: Colors.white, fontSize: 11),
+                          )),
+                    ],
+                  ),
+                ),
+              ],
+              // Achievements
+              if (post.achievements.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: post.achievements.map((achievement) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.emoji_events, color: Colors.amber, size: 12),
+                          const SizedBox(width: 4),
+                          Text(
+                            achievement,
+                            style: const TextStyle(
+                              color: Colors.amber,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+              if (post.note != null && post.note!.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text(
+                  post.note!,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ],
+              const SizedBox(height: 12),
+              const Divider(color: Colors.grey, height: 1),
+              const SizedBox(height: 8),
+              // Actions
+              Row(
+                children: [
+                  InkWell(
+                    onTap: () => socialProvider.likePost(post.id),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: isLiked ? Colors.red : AppColors.textGray,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${post.likeCount}',
+                          style: TextStyle(
+                            color: isLiked ? Colors.red : AppColors.textGray,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Row(
+                    children: [
+                      Icon(Icons.comment_outlined, color: AppColors.textGray, size: 20),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${post.commentCount}',
+                        style: TextStyle(color: AppColors.textGray, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatChip(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}d ago';
+    } else {
+      return DateFormat('MMM d').format(timestamp);
+    }
+  }
+}
+
 // Shared Workouts Tab  
 class _SharedWorkoutsTab extends StatefulWidget {
-  const _SharedWorkoutsTab({super.key});
+  const _SharedWorkoutsTab();
 
   @override
   State<_SharedWorkoutsTab> createState() => _SharedWorkoutsTabState();
@@ -653,7 +946,7 @@ class _ChallengesTabState extends State<_ChallengesTab> {
 
 // Leaderboard Tab
 class _LeaderboardTab extends StatefulWidget {
-  const _LeaderboardTab({super.key});
+  const _LeaderboardTab();
 
   @override
   State<_LeaderboardTab> createState() => _LeaderboardTabState();
@@ -1092,5 +1385,335 @@ class _BadgesTabState extends State<_BadgesTab> {
             );
           },
         );
+  }
+}
+
+// New Leaderboard Tab using SocialProvider
+class _NewLeaderboardTab extends StatefulWidget {
+  const _NewLeaderboardTab({super.key});
+
+  @override
+  State<_NewLeaderboardTab> createState() => _NewLeaderboardTabState();
+}
+
+class _NewLeaderboardTabState extends State<_NewLeaderboardTab> {
+  int _selectedTab = 0; // 0: XP, 1: Streaks, 2: Workouts
+
+  @override
+  Widget build(BuildContext context) {
+    final socialProvider = context.watch<SocialProvider>();
+    
+    List<social.LeaderboardEntry> entries;
+    IconData icon;
+    Color color;
+    String suffix;
+    bool showLevel;
+    
+    switch (_selectedTab) {
+      case 0: // XP
+        entries = socialProvider.xpLeaderboard;
+        icon = Icons.star;
+        color = AppColors.primaryRed;
+        suffix = 'XP';
+        showLevel = true;
+        break;
+      case 1: // Streaks
+        entries = socialProvider.streakLeaderboard;
+        icon = Icons.local_fire_department;
+        color = Colors.orange;
+        suffix = 'days';
+        showLevel = false;
+        break;
+      case 2: // Workouts
+        entries = socialProvider.workoutLeaderboard;
+        icon = Icons.fitness_center;
+        color = Colors.blue;
+        suffix = 'workouts';
+        showLevel = false;
+        break;
+      default:
+        entries = [];
+        icon = Icons.star;
+        color = AppColors.primaryRed;
+        suffix = 'XP';
+        showLevel = false;
+    }
+
+    return Column(
+      children: [
+        // Tab selector
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: _TabButton(
+                  label: 'XP',
+                  isSelected: _selectedTab == 0,
+                  onTap: () => setState(() => _selectedTab = 0),
+                  icon: Icons.star,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _TabButton(
+                  label: 'Streaks',
+                  isSelected: _selectedTab == 1,
+                  onTap: () => setState(() => _selectedTab = 1),
+                  icon: Icons.local_fire_department,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _TabButton(
+                  label: 'Workouts',
+                  isSelected: _selectedTab == 2,
+                  onTap: () => setState(() => _selectedTab = 2),
+                  icon: Icons.fitness_center,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Leaderboard list
+        Expanded(
+          child: entries.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.emoji_events_outlined,
+                        size: 80,
+                        color: AppColors.textGray.withOpacity(0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No rankings yet',
+                        style: TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: entries.length > 5 ? 5 : entries.length,
+                  itemBuilder: (context, index) {
+                    final entry = entries[index];
+                    return _LeaderboardEntryCard(
+                      entry: entry,
+                      icon: icon,
+                      color: color,
+                      suffix: suffix,
+                      showLevel: showLevel,
+                    );
+                  },
+                ),
+        ),
+
+        // View full leaderboard button
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => context.push('/leaderboards'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryRed,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'VIEW FULL LEADERBOARDS',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final IconData icon;
+
+  const _TabButton({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primaryRed
+              : AppColors.backgroundCard,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : AppColors.textGray,
+              size: 20,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textGray,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LeaderboardEntryCard extends StatelessWidget {
+  final social.LeaderboardEntry entry;
+  final IconData icon;
+  final Color color;
+  final String suffix;
+  final bool showLevel;
+
+  const _LeaderboardEntryCard({
+    required this.entry,
+    required this.icon,
+    required this.color,
+    required this.suffix,
+    required this.showLevel,
+  });
+
+  Color _getRankColor() {
+    switch (entry.rank) {
+      case 1:
+        return Colors.amber;
+      case 2:
+        return Colors.grey[400]!;
+      case 3:
+        return const Color(0xFFCD7F32);
+      default:
+        return AppColors.textGray;
+    }
+  }
+
+  Widget _getRankWidget() {
+    if (entry.rank <= 3) {
+      return Icon(
+        Icons.emoji_events,
+        color: _getRankColor(),
+        size: 28,
+      );
+    }
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Center(
+        child: Text(
+          '${entry.rank}',
+          style: TextStyle(
+            color: AppColors.textGray,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: entry.isCurrentUser
+            ? color.withOpacity(0.15)
+            : AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: entry.isCurrentUser ? color : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: Row(
+        children: [
+          _getRankWidget(),
+          const SizedBox(width: 12),
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: color.withOpacity(0.2),
+            child: Icon(Icons.person, color: color, size: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.userName,
+                  style: TextStyle(
+                    color: entry.isCurrentUser ? color : AppColors.textWhite,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (showLevel && entry.level != null)
+                  Text(
+                    'Lvl ${entry.level} • ${entry.title}',
+                    style: TextStyle(
+                      color: AppColors.textGray,
+                      fontSize: 11,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              Icon(icon, color: color, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                '${entry.value}',
+                style: TextStyle(
+                  color: color,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

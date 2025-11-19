@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
 import '../providers/user_provider.dart';
 import '../providers/workout_provider.dart';
+import '../providers/gamification_provider.dart';
 import '../utils/routes.dart';
+import '../widgets/daily_challenges_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -13,6 +15,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final userProvider = context.watch<UserProvider>();
     final workoutProvider = context.watch<WorkoutProvider>();
+    final gamificationProvider = context.watch<GamificationProvider>();
     final user = userProvider.user;
 
     return Scaffold(
@@ -50,7 +53,45 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+
+                // Level and XP Bar
+                _LevelCard(
+                  level: gamificationProvider.userLevel.level,
+                  title: gamificationProvider.userLevel.title,
+                  currentXP: gamificationProvider.userLevel.currentXP,
+                  maxXP: gamificationProvider.userLevel.xpForNextLevel,
+                  progress: gamificationProvider.userLevel.progress,
+                ),
+
+                const SizedBox(height: 16),
+
+                // Streak and Achievements Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _StreakCard(
+                        streak: gamificationProvider.streak.currentStreak,
+                        isActive: gamificationProvider.streak.isActiveToday,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _AchievementsCard(
+                        unlocked: gamificationProvider.unlockedAchievementsCount,
+                        total: gamificationProvider.achievements.length,
+                        onTap: () => context.push('/achievements'),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 24),
+
+                // Daily Challenges
+                const DailyChallengesCard(),
+
+                const SizedBox(height: 24),
 
                 // Stats Cards
                 Row(
@@ -408,6 +449,255 @@ class _NavItem extends StatelessWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LevelCard extends StatelessWidget {
+  final int level;
+  final String title;
+  final int currentXP;
+  final int maxXP;
+  final double progress;
+
+  const _LevelCard({
+    required this.level,
+    required this.title,
+    required this.currentXP,
+    required this.maxXP,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primaryRed,
+            AppColors.primaryRed.withOpacity(0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      'LVL $level',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    title.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+              const Icon(Icons.star, color: Colors.amber, size: 28),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$currentXP / $maxXP XP',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: Colors.white.withOpacity(0.3),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              minHeight: 8,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StreakCard extends StatelessWidget {
+  final int streak;
+  final bool isActive;
+
+  const _StreakCard({
+    required this.streak,
+    required this.isActive,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isActive ? Colors.orange : Colors.transparent,
+          width: 2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.local_fire_department,
+                color: isActive ? Colors.orange : AppColors.textGray,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Streak',
+                style: TextStyle(
+                  color: AppColors.textGray,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '$streak',
+                style: TextStyle(
+                  color: isActive ? Colors.orange : AppColors.textWhite,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text(
+                  'days',
+                  style: TextStyle(
+                    color: AppColors.textGray,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AchievementsCard extends StatelessWidget {
+  final int unlocked;
+  final int total;
+  final VoidCallback onTap;
+
+  const _AchievementsCard({
+    required this.unlocked,
+    required this.total,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.backgroundCard,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.emoji_events,
+                  color: Colors.amber,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Achievements',
+                  style: TextStyle(
+                    color: AppColors.textGray,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '$unlocked',
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(
+                    '/$total',
+                    style: TextStyle(
+                      color: AppColors.textGray,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

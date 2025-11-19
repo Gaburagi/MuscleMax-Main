@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import '../models/custom_workout_model.dart';
 import '../providers/custom_workout_provider.dart';
 import '../providers/body_measurement_provider.dart';
+import '../providers/gamification_provider.dart';
+import '../providers/social_provider.dart';
 import '../utils/app_colors.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/level_up_dialog.dart';
 
 class ActiveCustomWorkoutScreen extends StatefulWidget {
   const ActiveCustomWorkoutScreen({super.key});
@@ -54,12 +57,16 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
     }
   }
 
-  void _completeWorkout(CustomWorkoutProvider provider) {
+  void _completeWorkout(CustomWorkoutProvider provider) async {
     _workoutTimer?.cancel();
     
     // Check for personal records before finishing
     final measurementProvider = context.read<BodyMeasurementProvider>();
+    final gamificationProvider = context.read<GamificationProvider>();
+    final socialProvider = context.read<SocialProvider>();
     final workout = provider.activeWorkout;
+    
+    final personalRecords = <String>[];
     
     if (workout != null) {
       for (final exercise in workout.exercises) {
@@ -71,14 +78,85 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
               weight: set.weight!,
               reps: set.reps,
             );
+            personalRecords.add('${exercise.template.name}: ${set.weight} lbs x ${set.reps}');
           }
         }
       }
     }
     
+    // Award gamification rewards
+    final result = await gamificationProvider.onWorkoutCompleted();
+    
+    // Update social features (leaderboards, team stats)
+    await socialProvider.updateLeaderboards(
+      xp: gamificationProvider.userLevel.currentXP,
+      streak: gamificationProvider.streak.currentStreak,
+      workouts: gamificationProvider.streak.workoutDates.length,
+      level: gamificationProvider.userLevel.level,
+      title: gamificationProvider.userLevel.title,
+    );
+    
+    if (socialProvider.currentUserTeam != null) {
+      await socialProvider.updateTeamStats(result.xpGained, 1);
+    }
+    
+    // Post workout to social feed
+    await socialProvider.postWorkout(
+      workoutName: workout?.name ?? 'Custom Workout',
+      durationMinutes: _workoutSecondsElapsed ~/ 60,
+      exercisesCompleted: workout?.exercises.length ?? 0,
+      personalRecords: personalRecords.take(3).toList(),
+      xpGained: result.xpGained,
+      achievements: result.unlockedAchievements.map((a) => a.name).toList(),
+    );
+    
+    // Show level up dialog if leveled up
+    if (mounted && result.leveledUp) {
+      showLevelUpDialog(
+        context,
+        newLevel: result.newLevel!,
+        newTitle: result.newTitle!,
+        xpGained: result.xpGained,
+      );
+    }
+    
+    // Show achievement notifications if any
+    if (mounted && result.unlockedAchievements.isNotEmpty) {
+      for (final achievement in result.unlockedAchievements) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Text(achievement.icon, style: const TextStyle(fontSize: 24)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Achievement Unlocked!',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(achievement.name),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    }
+    
     provider.finishWorkout();
     
-    context.go('/workout-summary?duration=$_workoutSecondsElapsed&exercises=${provider.activeWorkout?.exercises.length ?? 0}');
+    if (mounted) {
+      context.go('/workout-summary?duration=$_workoutSecondsElapsed&exercises=${provider.activeWorkout?.exercises.length ?? 0}');
+    }
   }
 
   void _quitWorkout(CustomWorkoutProvider provider) {
