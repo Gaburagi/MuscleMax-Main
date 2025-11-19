@@ -22,6 +22,10 @@ import '../screens/active_custom_workout_screen.dart';
 import '../screens/workout_history_screen.dart';
 import '../screens/community_screen.dart';
 import '../screens/friends_screen.dart';
+import '../screens/body_measurements_screen.dart';
+import '../screens/personal_records_screen.dart';
+import '../screens/progress_photos_screen.dart';
+import '../screens/progress_reports_screen.dart';
 
 // Track last navigation index for smooth transitions
 int _lastNavIndex = 0;
@@ -176,6 +180,22 @@ class AppRoutes {
       GoRoute(
         path: friends,
         builder: (context, state) => const FriendsScreen(),
+      ),
+      GoRoute(
+        path: '/body-measurements',
+        builder: (context, state) => const BodyMeasurementsScreen(),
+      ),
+      GoRoute(
+        path: '/personal-records',
+        builder: (context, state) => const PersonalRecordsScreen(),
+      ),
+      GoRoute(
+        path: '/progress-photos',
+        builder: (context, state) => const ProgressPhotosScreen(),
+      ),
+      GoRoute(
+        path: '/progress-reports',
+        builder: (context, state) => const ProgressReportsScreen(),
       ),
     ],
   );

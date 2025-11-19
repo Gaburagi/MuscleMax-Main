@@ -164,7 +164,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: AppColors.backgroundCard,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -311,7 +311,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
         actions: [
           TextButton(
             onPressed: _saveWorkout,
-            child: Text(
+            child: const Text(
               'SAVE',
               style: TextStyle(
                 fontFamily: 'Bebas Neue',
@@ -371,7 +371,7 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
             
             // Category
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               dropdownColor: const Color(0xFF333333),
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
@@ -411,8 +411,8 @@ class _WorkoutBuilderScreenState extends State<WorkoutBuilderScreen> {
                 ),
                 TextButton.icon(
                   onPressed: _showExerciseLibrary,
-                  icon: Icon(Icons.add, color: AppColors.primaryRed),
-                  label: Text(
+                  icon: const Icon(Icons.add, color: AppColors.primaryRed),
+                  label: const Text(
                     'ADD EXERCISE',
                     style: TextStyle(
                       fontFamily: 'DM Sans',

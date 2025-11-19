@@ -64,14 +64,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1D1E2C),
-              Color(0xFF222831),
-            ],
-          ),
+          gradient: AppColors.backgroundGradient,
         ),
         child: SafeArea(
           child: SingleChildScrollView(

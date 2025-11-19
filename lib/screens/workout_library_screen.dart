@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/custom_workout_provider.dart';
 import '../models/custom_workout_model.dart';
 import '../utils/routes.dart';
+import '../utils/app_colors.dart';
 
 class WorkoutLibraryScreen extends StatelessWidget {
   const WorkoutLibraryScreen({super.key});
@@ -11,7 +12,7 @@ class WorkoutLibraryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -111,7 +112,7 @@ class WorkoutLibraryScreen extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () => context.push(AppRoutes.workoutBuilder),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFC22F42),
+              backgroundColor: AppColors.primaryRed,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -268,7 +269,7 @@ class WorkoutLibraryScreen extends StatelessWidget {
                           context.push(AppRoutes.activeCustomWorkout);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC22F42),
+                          backgroundColor: AppColors.primaryRed,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

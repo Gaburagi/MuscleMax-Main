@@ -11,7 +11,6 @@ class NutritionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
       body: Container(
         decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
@@ -30,8 +29,8 @@ class NutritionScreen extends StatelessWidget {
               return Column(
                 children: [
                   // Header
-                  Padding(
-                    padding: const EdgeInsets.all(20),
+                  const Padding(
+                    padding: EdgeInsets.all(20),
                     child: Text(
                       'NUTRITION',
                       style: TextStyle(
@@ -67,17 +66,17 @@ class NutritionScreen extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.local_drink, color: Colors.lightBlue, size: 32),
+                              const Icon(Icons.local_drink, color: Colors.lightBlue, size: 32),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Text(
                                   'Water: ${nutrition.waterIntake}ml',
-                                  style: TextStyle(color: AppColors.textWhite, fontSize: 16),
+                                  style: const TextStyle(color: AppColors.textWhite, fontSize: 16),
                                 ),
                               ),
                               IconButton(
                                 onPressed: () => provider.addWaterIntake(250),
-                                icon: Icon(Icons.add_circle, color: AppColors.primaryRed, size: 32),
+                                icon: const Icon(Icons.add_circle, color: AppColors.primaryRed, size: 32),
                               ),
                             ],
                           ),
@@ -89,7 +88,7 @@ class NutritionScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            const Text(
                               'MEALS',
                               style: TextStyle(
                                 color: AppColors.textWhite,
@@ -104,15 +103,15 @@ class NutritionScreen extends StatelessWidget {
                                   context: context,
                                   builder: (_) => AlertDialog(
                                     backgroundColor: AppColors.backgroundCard,
-                                    title: Text('Add Meal', style: TextStyle(color: AppColors.textWhite)),
-                                    content: Text(
+                                    title: const Text('Add Meal', style: TextStyle(color: AppColors.textWhite)),
+                                    content: const Text(
                                       'Meal tracking coming soon!',
                                       style: TextStyle(color: AppColors.textWhite),
                                     ),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(context),
-                                        child: Text('OK'),
+                                        child: const Text('OK'),
                                       ),
                                     ],
                                   ),
@@ -120,9 +119,9 @@ class NutritionScreen extends StatelessWidget {
                               },
                               style: TextButton.styleFrom(
                                 backgroundColor: AppColors.primaryRed,
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               ),
-                              child: Text('ADD', style: TextStyle(color: AppColors.textWhite)),
+                              child: const Text('ADD', style: TextStyle(color: AppColors.textWhite)),
                             ),
                           ],
                         ),
@@ -146,7 +145,7 @@ class NutritionScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNav(currentIndex: 4),
+      bottomNavigationBar: const _BottomNav(currentIndex: 4),
     );
   }
 
@@ -162,7 +161,7 @@ class NutritionScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textGray,
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -171,7 +170,7 @@ class NutritionScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textWhite,
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -183,7 +182,7 @@ class NutritionScreen extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               backgroundColor: AppColors.backgroundDark,
-              valueColor: AlwaysStoppedAnimation(AppColors.primaryRed),
+              valueColor: const AlwaysStoppedAnimation(AppColors.primaryRed),
               minHeight: 6,
             ),
           ),
@@ -209,7 +208,7 @@ class NutritionScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -218,7 +217,7 @@ class NutritionScreen extends StatelessWidget {
               if (totalCals > 0)
                 Text(
                   '${totalCals.toInt()} kcal',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.primaryRed,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -229,7 +228,7 @@ class NutritionScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             meals.isEmpty ? 'No meals added' : '${meals.length} meal(s)',
-            style: TextStyle(color: AppColors.textGray, fontSize: 12),
+            style: const TextStyle(color: AppColors.textGray, fontSize: 12),
           ),
         ],
       ),
@@ -245,12 +244,13 @@ class _BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.backgroundCard,
+      decoration: const BoxDecoration(
+        color: AppColors.backgroundDark,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black26,
             blurRadius: 10,
+            offset: Offset(0, -2),
           ),
         ],
       ),
@@ -259,39 +259,39 @@ class _BottomNav extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                icon: Icons.home,
-                label: 'Home',
-                isSelected: currentIndex == 0,
-                onTap: () => context.go('/home'),
-              ),
-              _NavItem(
-                icon: Icons.fitness_center,
-                label: 'Training',
-                isSelected: currentIndex == 1,
-                onTap: () => context.go('/training'),
-              ),
-              _NavItem(
-                icon: Icons.bar_chart,
-                label: 'Progress',
-                isSelected: currentIndex == 2,
-                onTap: () => context.go('/progress'),
-              ),
-              _NavItem(
-                icon: Icons.person,
-                label: 'Profile',
-                isSelected: currentIndex == 3,
-                onTap: () => context.go('/profile'),
-              ),
-              _NavItem(
-                icon: Icons.restaurant,
-                label: 'Nutrition',
-                isSelected: currentIndex == 4,
-                onTap: () => context.go('/nutrition'),
-              ),
-            ],
+        children: [
+          _NavItem(
+            icon: Icons.home,
+            label: 'Home',
+            isSelected: currentIndex == 0,
+            onTap: () => context.go('/home'),
           ),
+          _NavItem(
+            icon: Icons.fitness_center,
+            label: 'Training',
+            isSelected: currentIndex == 1,
+            onTap: () => context.go('/training'),
+          ),
+          _NavItem(
+            icon: Icons.bar_chart,
+            label: 'Progress',
+            isSelected: currentIndex == 2,
+            onTap: () => context.go('/progress'),
+          ),
+          _NavItem(
+            icon: Icons.person,
+            label: 'Profile',
+            isSelected: currentIndex == 3,
+            onTap: () => context.go('/profile'),
+          ),
+          _NavItem(
+            icon: Icons.restaurant,
+            label: 'Nutrition',
+            isSelected: currentIndex == 4,
+            onTap: () => context.go('/nutrition'),
+          ),
+        ],
+      ),
         ),
       ),
     );
@@ -315,24 +315,35 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? AppColors.primaryRed : AppColors.textGray,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppColors.primaryRed : AppColors.textGray,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: isSelected ? AppColors.primaryRed : Colors.transparent,
+              width: 2,
             ),
           ),
-        ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

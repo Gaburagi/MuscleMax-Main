@@ -9,6 +9,7 @@ import 'providers/nutrition_provider.dart';
 import 'providers/custom_workout_provider.dart';
 import 'providers/community_provider.dart';
 import 'providers/friends_provider.dart';
+import 'providers/body_measurement_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +42,7 @@ class _MuscleMaxAppState extends State<MuscleMaxApp> {
         ChangeNotifierProvider(create: (_) => NutritionProvider()..loadNutritionData()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),
         ChangeNotifierProvider(create: (_) => FriendsProvider()),
+        ChangeNotifierProvider(create: (_) => BodyMeasurementProvider()..loadData()),
         ChangeNotifierProxyProvider<CommunityProvider, CustomWorkoutProvider>(
           create: (context) => CustomWorkoutProvider()..loadWorkouts(),
           update: (context, communityProvider, customWorkoutProvider) {

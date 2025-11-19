@@ -15,7 +15,7 @@ class ProgressScreen extends StatefulWidget {
 
 class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _currentNavIndex = 2; // Progress tab in bottom nav
+  final int _currentNavIndex = 2; // Progress tab in bottom nav
 
   @override
   void initState() {
@@ -137,6 +137,74 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Body Measurements Button
+          ElevatedButton.icon(
+            onPressed: () {
+              context.push('/body-measurements');
+            },
+            icon: const Icon(Icons.monitor_weight),
+            label: const Text('Body Measurements & Goals'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryRed,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Personal Records Button
+          ElevatedButton.icon(
+            onPressed: () {
+              context.push('/personal-records');
+            },
+            icon: const Icon(Icons.emoji_events),
+            label: const Text('Personal Records'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Progress Photos Button
+          ElevatedButton.icon(
+            onPressed: () {
+              context.push('/progress-photos');
+            },
+            icon: const Icon(Icons.photo_library),
+            label: const Text('Progress Photos'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Progress Reports Button
+          ElevatedButton.icon(
+            onPressed: () {
+              context.push('/progress-reports');
+            },
+            icon: const Icon(Icons.assessment),
+            label: const Text('Progress Reports'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // Main Stats Cards
           Row(
             children: [
@@ -1005,14 +1073,20 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.backgroundCard,
-        border: Border(
-          top: BorderSide(color: AppColors.backgroundDark, width: 1),
-        ),
+        color: AppColors.backgroundDark,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: Offset(0, -2),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _NavItem(
             icon: Icons.home,
@@ -1046,6 +1120,8 @@ class _BottomNav extends StatelessWidget {
           ),
         ],
       ),
+        ),
+      ),
     );
   }
 }
@@ -1067,24 +1143,35 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? AppColors.primaryRed : AppColors.textGray,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppColors.primaryRed : AppColors.textGray,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: isSelected ? AppColors.primaryRed : Colors.transparent,
+              width: 2,
             ),
           ),
-        ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/custom_workout_model.dart';
 import '../providers/custom_workout_provider.dart';
+import '../providers/body_measurement_provider.dart';
 import '../utils/app_colors.dart';
 import 'package:go_router/go_router.dart';
 
@@ -55,6 +56,26 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
 
   void _completeWorkout(CustomWorkoutProvider provider) {
     _workoutTimer?.cancel();
+    
+    // Check for personal records before finishing
+    final measurementProvider = context.read<BodyMeasurementProvider>();
+    final workout = provider.activeWorkout;
+    
+    if (workout != null) {
+      for (final exercise in workout.exercises) {
+        for (final set in exercise.sets) {
+          if (set.isCompleted && set.weight != null && set.weight! > 0) {
+            measurementProvider.checkAndUpdatePersonalRecord(
+              exerciseId: exercise.template.name.toLowerCase().replaceAll(' ', '_'),
+              exerciseName: exercise.template.name,
+              weight: set.weight!,
+              reps: set.reps,
+            );
+          }
+        }
+      }
+    }
+    
     provider.finishWorkout();
     
     context.go('/workout-summary?duration=$_workoutSecondsElapsed&exercises=${provider.activeWorkout?.exercises.length ?? 0}');
@@ -85,7 +106,7 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
               Navigator.pop(context);
               context.pop();
             },
-            child: Text('QUIT', style: TextStyle(color: AppColors.primaryRed)),
+            child: const Text('QUIT', style: TextStyle(color: AppColors.primaryRed)),
           ),
         ],
       ),
@@ -99,9 +120,9 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
         final workout = provider.activeWorkout;
         
         if (workout == null || workout.exercises.isEmpty) {
-          return Scaffold(
-            backgroundColor: const Color(0xFF0F0F0F),
-            body: const Center(
+          return const Scaffold(
+            backgroundColor: AppColors.backgroundDark,
+            body: Center(
               child: Text(
                 'No active workout',
                 style: TextStyle(color: Colors.white),
@@ -115,7 +136,7 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
         final progress = (exerciseIndex + 1) / workout.exercises.length;
 
         return Scaffold(
-          backgroundColor: const Color(0xFF0F0F0F),
+          backgroundColor: AppColors.backgroundDark,
           body: SafeArea(
             child: Column(
               children: [
@@ -163,7 +184,7 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
                   child: LinearProgressIndicator(
                     value: progress,
                     backgroundColor: const Color(0xFF333333),
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
                     minHeight: 6,
                     borderRadius: BorderRadius.circular(3),
                   ),
@@ -405,7 +426,7 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
                 color: AppColors.primaryRed.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.timer,
                 size: 60,
                 color: AppColors.primaryRed,
@@ -428,7 +449,7 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
             // Countdown Timer
             Text(
               '${provider.remainingRestTime}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontFamily: 'Bebas Neue',
                 color: AppColors.primaryRed,
                 fontSize: 72,
@@ -525,12 +546,12 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
                 onPressed: () => provider.skipRest(),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  side: BorderSide(color: AppColors.primaryRed, width: 2),
+                  side: const BorderSide(color: AppColors.primaryRed, width: 2),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'SKIP REST',
                   style: TextStyle(
                     fontFamily: 'Bebas Neue',

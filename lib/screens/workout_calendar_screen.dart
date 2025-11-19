@@ -42,7 +42,7 @@ class _WorkoutCalendarScreenState extends State<WorkoutCalendarScreen> {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: AppColors.backgroundCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -51,7 +51,7 @@ class _WorkoutCalendarScreenState extends State<WorkoutCalendarScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: const Text(
               'SELECT WORKOUT',
               style: TextStyle(
                 fontFamily: 'Bebas Neue',
@@ -99,7 +99,7 @@ class _WorkoutCalendarScreenState extends State<WorkoutCalendarScreen> {
                       color: AppColors.primaryRed.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.fitness_center,
                       color: AppColors.primaryRed,
                     ),
@@ -150,7 +150,7 @@ class _WorkoutCalendarScreenState extends State<WorkoutCalendarScreen> {
     
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: AppColors.backgroundCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -211,7 +211,7 @@ class _WorkoutCalendarScreenState extends State<WorkoutCalendarScreen> {
                           ),
                         ),
                         if (scheduled.isCompleted)
-                          Icon(Icons.check_circle, color: Colors.green, size: 20)
+                          const Icon(Icons.check_circle, color: Colors.green, size: 20)
                         else
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red, size: 20),
@@ -310,9 +310,9 @@ class _WorkoutCalendarScreenState extends State<WorkoutCalendarScreen> {
     final days = _getDaysInMonth(_selectedMonth);
     
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F0F0F),
+        backgroundColor: AppColors.backgroundDark,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
