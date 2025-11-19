@@ -98,7 +98,7 @@ class SocialProvider with ChangeNotifier {
   Future<void> _loadChallenges() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final data = prefs.getString('challenges');
+      final data = prefs.getString('social_challenges');
       if (data != null) {
         final List<dynamic> list = jsonDecode(data);
         _challenges = list.map((c) => Challenge.fromJson(c)).toList();
@@ -108,6 +108,8 @@ class SocialProvider with ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Error loading challenges: $e');
+      _challenges = _generateSampleChallenges();
+      await _saveChallenges();
     }
   }
 
@@ -179,7 +181,7 @@ class SocialProvider with ChangeNotifier {
 
   Future<void> _saveChallenges() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('challenges',
+    await prefs.setString('social_challenges',
         jsonEncode(_challenges.map((c) => c.toJson()).toList()));
   }
 

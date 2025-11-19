@@ -8,6 +8,7 @@ import '../providers/social_provider.dart';
 import '../models/community_models.dart';
 import '../models/social_model.dart' as social;
 import '../utils/app_colors.dart';
+import 'team_battles_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -79,6 +80,20 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shield, color: AppColors.primaryRed),
+            tooltip: 'Team Battles',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const TeamBattlesScreen(),
+                ),
+              );
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: AppColors.primaryRed,
@@ -704,97 +719,245 @@ class _SharedWorkoutsTabState extends State<_SharedWorkoutsTab> {
 }
 
 // Challenges Tab
-class _ChallengesTab extends StatefulWidget {
+class _ChallengesTab extends StatelessWidget {
   const _ChallengesTab({super.key});
 
   @override
-  State<_ChallengesTab> createState() => _ChallengesTabState();
-}
-
-class _ChallengesTabState extends State<_ChallengesTab> {
-  @override
-  void initState() {
-    super.initState();
-    // Update challenges with current workout data
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateChallenges();
-    });
-  }
-
-  Future<void> _updateChallenges() async {
-    final customWorkoutProvider = context.read<CustomWorkoutProvider>();
-    final communityProvider = context.read<CommunityProvider>();
-    
-    // Get challenges and update their progress
-    for (final challenge in communityProvider.challenges) {
-      if (!challenge.isJoined) continue;
-      
-      final stats = customWorkoutProvider.getWorkoutStatsForPeriod(
-        challenge.startDate,
-        challenge.endDate,
-      );
-      
-      await communityProvider.updateChallengesWithWorkoutData(
-        totalWorkoutsInPeriod: stats['totalWorkouts'],
-        totalExercisesInPeriod: stats['totalExercises'],
-        totalMinutesInPeriod: stats['totalMinutes'],
-        workoutDatesInPeriod: stats['workoutDates'],
-      );
-      
-      break; // Only need to run once
-    }
-    
-    if (mounted) setState(() {});
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final provider = context.read<CommunityProvider>();
-    final challenges = provider.challenges;
+    final socialProvider = context.watch<SocialProvider>();
+    final pendingChallenges = socialProvider.pendingChallenges;
+    final activeChallenges = socialProvider.activeChallenges;
 
-    return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: challenges.length,
-          itemBuilder: (context, index) {
-            final challenge = challenges[index];
+    if (pendingChallenges.isEmpty && activeChallenges.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.emoji_events_outlined,
+              size: 80,
+              color: AppColors.textGray.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No active challenges',
+              style: TextStyle(
+                color: AppColors.textGray,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Create challenge dialog
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('CREATE CHALLENGE'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryRed,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Pending Challenges Section
+        if (pendingChallenges.isNotEmpty) ...[
+          const Text(
+            'PENDING CHALLENGES',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...pendingChallenges.map((challenge) {
             return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: challenge.isJoined
-                      ? [
-                          AppColors.primaryRed.withOpacity(0.2),
-                          AppColors.primaryRedDark.withOpacity(0.1),
-                        ]
-                      : [
-                          AppColors.darkGray,
-                          AppColors.darkGray,
-                        ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: challenge.isJoined
-                    ? Border.all(color: AppColors.primaryRed, width: 2)
-                    : null,
+                color: Colors.orange.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange, width: 2),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryRed,
-                          shape: BoxShape.circle,
+                      const Icon(Icons.emoji_events, color: Colors.orange, size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${challenge.challengerName} challenged you!',
+                              style: const TextStyle(
+                                color: Colors.orange,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              challenge.description,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.flag,
-                          color: Colors.white,
-                          size: 24,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => socialProvider.acceptChallenge(challenge.id),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
+                          child: const Text('ACCEPT'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => socialProvider.declineChallenge(challenge.id),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Colors.red),
+                          ),
+                          child: const Text(
+                            'DECLINE',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 24),
+        ],
+
+        // Active Challenges Section
+        if (activeChallenges.isNotEmpty) ...[
+          const Text(
+            'ACTIVE CHALLENGES',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...activeChallenges.map((challenge) {
+            final isChallenger = challenge.challengerId == socialProvider.currentUserId;
+            final myProgressMap = isChallenger ? challenge.challengerProgress : challenge.opponentProgress;
+            final opponentProgressMap = isChallenger ? challenge.opponentProgress : challenge.challengerProgress;
+            final opponentName = isChallenger ? challenge.opponentName : challenge.challengerName;
+            
+            final myProgress = myProgressMap['count'] ?? 0;
+            final opponentProgress = opponentProgressMap['count'] ?? 0;
+            final targetValue = challenge.targetValue['count'] ?? 0;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.primaryRed, width: 2),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          challenge.description,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.amber, width: 1),
+                        ),
+                        child: Text(
+                          '+${challenge.xpReward} XP',
+                          style: const TextStyle(
+                            color: Colors.amber,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'vs $opponentName',
+                    style: TextStyle(
+                      color: AppColors.textGray,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'You',
+                              style: TextStyle(
+                                color: AppColors.textGray,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: targetValue > 0 ? myProgress / targetValue : 0,
+                                backgroundColor: Colors.white.withOpacity(0.1),
+                                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
+                                minHeight: 8,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$myProgress / $targetValue',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -803,20 +966,30 @@ class _ChallengesTabState extends State<_ChallengesTab> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              challenge.name,
-                              style: const TextStyle(
-                                fontFamily: 'Bebas Neue',
-                                fontSize: 20,
-                                color: Colors.white,
-                                letterSpacing: 1,
+                              opponentName,
+                              style: TextStyle(
+                                color: AppColors.textGray,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: targetValue > 0 ? opponentProgress / targetValue : 0,
+                                backgroundColor: Colors.white.withOpacity(0.1),
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade400),
+                                minHeight: 8,
                               ),
                             ),
+                            const SizedBox(height: 4),
                             Text(
-                              challenge.description,
-                              style: TextStyle(
-                                fontFamily: 'DM Sans',
+                              '$opponentProgress / $targetValue',
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontSize: 12,
-                                color: Colors.white.withOpacity(0.7),
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -824,123 +997,46 @@ class _ChallengesTabState extends State<_ChallengesTab> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Progress bar (if joined)
-                  if (challenge.isJoined) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Progress: ${challenge.currentProgress}/${challenge.targetCount} ${_getMetricLabel(challenge.metric)}',
-                          style: const TextStyle(
-                            fontFamily: 'DM Sans',
-                            fontSize: 13,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${challenge.progressPercentage.toStringAsFixed(0)}%',
-                          style: const TextStyle(
-                            fontFamily: 'DM Sans',
-                            fontSize: 13,
-                            color: AppColors.primaryRed,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: challenge.progressPercentage / 100,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
-                        minHeight: 8,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-
-                  // Stats row
+                  const SizedBox(height: 12),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.people, size: 16, color: Colors.white.withOpacity(0.7)),
-                      const SizedBox(width: 6),
                       Text(
-                        '${challenge.participants} participants',
+                        'Expires: ${DateFormat('MMM d').format(challenge.expiresAt)}',
                         style: TextStyle(
-                          fontFamily: 'DM Sans',
+                          color: AppColors.textGray,
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.7),
                         ),
                       ),
-                      const SizedBox(width: 20),
-                      Icon(Icons.access_time, size: 16, color: Colors.white.withOpacity(0.7)),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${challenge.daysRemaining} days left',
-                        style: TextStyle(
-                          fontFamily: 'DM Sans',
-                          fontSize: 12,
-                          color: Colors.white.withOpacity(0.7),
+                      if (challenge.winnerId != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: challenge.winnerId == socialProvider.currentUserId
+                                ? Colors.green.withOpacity(0.2)
+                                : Colors.red.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            challenge.winnerId == socialProvider.currentUserId ? 'WON' : 'LOST',
+                            style: TextStyle(
+                              color: challenge.winnerId == socialProvider.currentUserId
+                                  ? Colors.green
+                                  : Colors.red,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                      ),
                     ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Join/Leave button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          context.read<CommunityProvider>().toggleChallengeJoin(challenge.id);
-                        });
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: challenge.isJoined
-                            ? AppColors.darkGray
-                            : AppColors.primaryRed,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        challenge.isJoined ? 'LEAVE CHALLENGE' : 'JOIN CHALLENGE',
-                        style: const TextStyle(
-                          fontFamily: 'DM Sans',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
             );
-          },
-        );
-  }
-
-  String _getMetricLabel(String metric) {
-    switch (metric) {
-      case 'workouts':
-        return 'workouts';
-      case 'exercises':
-        return 'exercises';
-      case 'minutes':
-        return 'minutes';
-      case 'days':
-        return 'days';
-      default:
-        return '';
-    }
+          }),
+        ],
+      ],
+    );
   }
 }
 
