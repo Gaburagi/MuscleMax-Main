@@ -7,6 +7,11 @@ import '../providers/workout_provider.dart';
 import '../providers/gamification_provider.dart';
 import '../utils/routes.dart';
 import '../widgets/daily_challenges_card.dart';
+import 'quick_workout_generator_screen.dart';
+import 'workout_recommendations_screen.dart';
+import 'adaptive_difficulty_screen.dart';
+import 'recovery_dashboard_screen.dart';
+import 'goal_prediction_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -99,7 +104,7 @@ class HomeScreen extends StatelessWidget {
                     Expanded(
                       child: _StatCard(
                         title: 'Workouts',
-                        value: '${workoutProvider.totalWorkoutsCompleted}',
+                        value: '${gamificationProvider.streak.workoutDates.length}',
                         icon: Icons.fitness_center,
                         color: AppColors.primaryRed,
                       ),
@@ -125,38 +130,96 @@ class HomeScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 
-                _QuickActionButton(
-                  title: 'Browse Training Programs',
-                  subtitle: 'Find the perfect workout for you',
-                  icon: Icons.list_alt,
-                  onTap: () => context.go(AppRoutes.training),
-                ),
-                
-                const SizedBox(height: 12),
-                
-                _QuickActionButton(
-                  title: 'View Profile',
-                  subtitle: 'Check your stats and goals',
-                  icon: Icons.person,
-                  onTap: () => context.go(AppRoutes.profile),
-                ),
-
-                const SizedBox(height: 12),
-                
-                _QuickActionButton(
-                  title: 'Community Hub',
-                  subtitle: 'Challenges, leaderboards & shared workouts',
-                  icon: Icons.people,
-                  onTap: () => context.go(AppRoutes.community),
-                ),
-
-                const SizedBox(height: 12),
-
-                _QuickActionButton(
-                  title: 'Friends',
-                  subtitle: 'Connect with friends & view their activity',
-                  icon: Icons.group,
-                  onTap: () => context.go(AppRoutes.friends),
+                // Grid layout for AI features
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 1.4,
+                  children: [
+                    _QuickActionCard(
+                      title: 'AI Recommendations',
+                      icon: Icons.auto_awesome,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WorkoutRecommendationsScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionCard(
+                      title: 'AI Quick Workout',
+                      icon: Icons.psychology,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const QuickWorkoutGeneratorScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionCard(
+                      title: 'Adaptive Difficulty',
+                      icon: Icons.trending_up,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const AdaptiveDifficultyScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionCard(
+                      title: 'Recovery & Readiness',
+                      icon: Icons.healing,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RecoveryDashboardScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionCard(
+                      title: 'Goal Predictions',
+                      icon: Icons.analytics,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const GoalPredictionScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionCard(
+                      title: 'Training Programs',
+                      icon: Icons.list_alt,
+                      onTap: () => context.go(AppRoutes.training),
+                    ),
+                    _QuickActionCard(
+                      title: 'Profile',
+                      icon: Icons.person,
+                      onTap: () => context.go(AppRoutes.profile),
+                    ),
+                    _QuickActionCard(
+                      title: 'Community',
+                      icon: Icons.people,
+                      onTap: () => context.go(AppRoutes.community),
+                    ),
+                    _QuickActionCard(
+                      title: 'Friends',
+                      icon: Icons.group,
+                      onTap: () => context.go(AppRoutes.friends),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 32),
@@ -275,6 +338,62 @@ class _StatCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.title,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: AppColors.redGradient,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryRed.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: AppColors.textWhite, size: 32),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textWhite,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -594,7 +713,7 @@ class _StreakCard extends StatelessWidget {
                 size: 24,
               ),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'Streak',
                 style: TextStyle(
                   color: AppColors.textGray,
@@ -616,8 +735,8 @@ class _StreakCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 6),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 6),
                 child: Text(
                   'days',
                   style: TextStyle(
@@ -658,14 +777,14 @@ class _AchievementsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.emoji_events,
                   color: Colors.amber,
                   size: 24,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 Text(
                   'Achievements',
                   style: TextStyle(
@@ -691,7 +810,7 @@ class _AchievementsCard extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Text(
                     '/$total',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textGray,
                       fontSize: 14,
                     ),

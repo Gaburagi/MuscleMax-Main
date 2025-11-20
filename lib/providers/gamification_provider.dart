@@ -347,7 +347,12 @@ class GamificationProvider with ChangeNotifier {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // Check if already worked out today
+    // Always add workout to the list (even multiple per day)
+    _streak = _streak.copyWith(
+      workoutDates: [..._streak.workoutDates, now],
+    );
+
+    // Update streak only once per day
     if (_streak.lastWorkoutDate != null) {
       final lastWorkout = DateTime(
         _streak.lastWorkoutDate!.year,
@@ -356,7 +361,10 @@ class GamificationProvider with ChangeNotifier {
       );
 
       if (lastWorkout == today) {
-        return; // Already recorded today
+        // Same day - don't update streak, but workout was already added above
+        await _saveStreak();
+        notifyListeners();
+        return;
       }
 
       // Check if streak continues (yesterday)
@@ -367,14 +375,12 @@ class GamificationProvider with ChangeNotifier {
           currentStreak: _streak.currentStreak + 1,
           longestStreak: max(_streak.longestStreak, _streak.currentStreak + 1),
           lastWorkoutDate: now,
-          workoutDates: [..._streak.workoutDates, now],
         );
       } else {
         // Streak broken
         _streak = _streak.copyWith(
           currentStreak: 1,
           lastWorkoutDate: now,
-          workoutDates: [..._streak.workoutDates, now],
         );
       }
     } else {
@@ -383,7 +389,6 @@ class GamificationProvider with ChangeNotifier {
         currentStreak: 1,
         longestStreak: 1,
         lastWorkoutDate: now,
-        workoutDates: [now],
       );
     }
 

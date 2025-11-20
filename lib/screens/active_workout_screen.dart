@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/workout_model.dart';
 import '../providers/workout_provider.dart';
+import '../providers/gamification_provider.dart';
+import '../providers/social_provider.dart';
+import '../providers/ai_workout_provider.dart';
+import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
 import 'package:go_router/go_router.dart';
 
@@ -26,7 +30,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   Timer? _restTimer;
   Timer? _workoutTimer;
   int _workoutSecondsElapsed = 0;
-  List<SetLog> _completedSets = [];
+  final List<SetLog> _completedSets = [];
   WorkoutProgram? _workout;
 
   @override
@@ -121,15 +125,216 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
     });
   }
 
-  void _completeWorkout() {
+  void _completeWorkout() async {
     _workoutTimer?.cancel();
     _restTimer?.cancel();
 
     final workoutProvider = context.read<WorkoutProvider>();
     workoutProvider.completeWorkout();
 
-    // Navigate to summary screen
-    context.go('/workout-summary?duration=$_workoutSecondsElapsed&exercises=${_workout!.exercises.length}');
+    // Award gamification rewards
+    final gamificationProvider = context.read<GamificationProvider>();
+    final result = await gamificationProvider.onWorkoutCompleted();
+    
+    // Track muscle recovery for AI
+    final aiProvider = context.read<AIWorkoutProvider>();
+    final muscleGroups = _getMuscleGroupsFromExercises();
+    final volumeLoad = (_workoutSecondsElapsed / 60.0) * (_workout?.exercises.length ?? 1);
+    final intensity = _estimateIntensity();
+    for (final muscleGroup in muscleGroups) {
+      aiProvider.updateMuscleRecovery(muscleGroup, volumeLoad, intensity);
+    }
+    
+    // Post to social feed
+    final socialProvider = context.read<SocialProvider>();
+    await socialProvider.postWorkout(
+      workoutName: _workout!.name,
+      durationMinutes: _workoutSecondsElapsed ~/ 60,
+      exercisesCompleted: _workout!.exercises.length,
+      caloriesBurned: _calculateCalories(),
+      personalRecords: [],
+      xpGained: result.xpGained,
+      achievements: result.unlockedAchievements.map((a) => a.name).toList(),
+    );
+    
+    // Show completion dialog with achievements
+    if (mounted) {
+      _showCompletionDialog(result);
+    }
+  }
+
+  int _calculateCalories() {
+    // Rough estimate: 5 calories per minute
+    return (_workoutSecondsElapsed ~/ 60) * 5;
+  }
+
+  void _showCompletionDialog(WorkoutCompletionResult result) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          '🎉 WORKOUT COMPLETE!',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Bebas Neue',
+            fontSize: 24,
+            color: Colors.white,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildSummaryRow('Duration', _formatDuration(_workoutSecondsElapsed)),
+            _buildSummaryRow('Exercises', '${_workout!.exercises.length}'),
+            _buildSummaryRow('Est. Calories', '${_calculateCalories()}'),
+            _buildSummaryRow('XP Gained', '+${result.xpGained}'),
+            if (result.leveledUp) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryRed.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      '🎊 LEVEL UP!',
+                      style: TextStyle(
+                        color: AppColors.primaryRed,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    if (result.newTitle != null)
+                      Text(
+                        result.newTitle!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+            if (result.unlockedAchievements.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              ...result.unlockedAchievements.map((achievement) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryRed.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        achievement.icon,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              achievement.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              achievement.description,
+                              style: TextStyle(
+                                color: AppColors.textGray,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+            ],
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              context.go('/home'); // Go to home
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryRed,
+            ),
+            child: const Text('DONE'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<String> _getMuscleGroupsFromExercises() {
+    if (_workout == null) return [];
+    
+    final Set<String> muscleGroups = {};
+    for (final exercise in _workout!.exercises) {
+      final name = exercise.name.toLowerCase();
+      if (name.contains('chest') || name.contains('bench') || name.contains('push up')) {
+        muscleGroups.add('Chest');
+      }
+      if (name.contains('back') || name.contains('row') || name.contains('pull')) {
+        muscleGroups.add('Back');
+      }
+      if (name.contains('leg') || name.contains('squat') || name.contains('lunge')) {
+        muscleGroups.add('Legs');
+      }
+      if (name.contains('shoulder') || name.contains('press')) {
+        muscleGroups.add('Shoulders');
+      }
+      if (name.contains('arm') || name.contains('curl') || name.contains('tricep')) {
+        muscleGroups.add('Arms');
+      }
+      if (name.contains('core') || name.contains('abs') || name.contains('plank')) {
+        muscleGroups.add('Core');
+      }
+    }
+    return muscleGroups.isEmpty ? ['Chest', 'Back', 'Legs'] : muscleGroups.toList();
+  }
+
+  WorkoutIntensity _estimateIntensity() {
+    final minutes = _workoutSecondsElapsed ~/ 60;
+    if (minutes < 20) return WorkoutIntensity.light;
+    if (minutes < 40) return WorkoutIntensity.moderate;
+    if (minutes < 60) return WorkoutIntensity.hard;
+    return WorkoutIntensity.extreme;
+  }
+
+  Widget _buildSummaryRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(color: AppColors.textGray)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _quitWorkout() {

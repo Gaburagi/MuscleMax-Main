@@ -6,6 +6,8 @@ import '../providers/custom_workout_provider.dart';
 import '../providers/body_measurement_provider.dart';
 import '../providers/gamification_provider.dart';
 import '../providers/social_provider.dart';
+import '../providers/ai_workout_provider.dart';
+import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/level_up_dialog.dart';
@@ -87,6 +89,15 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
     // Award gamification rewards
     final result = await gamificationProvider.onWorkoutCompleted();
     
+    // Track muscle recovery for AI (based on workout category)
+    final aiProvider = context.read<AIWorkoutProvider>();
+    final muscleGroups = _getMuscleGroupsFromWorkout(workout);
+    final volumeLoad = (_workoutSecondsElapsed / 60.0) * (workout?.exercises.length ?? 1);
+    final intensity = _estimateIntensity();
+    for (final muscleGroup in muscleGroups) {
+      aiProvider.updateMuscleRecovery(muscleGroup, volumeLoad, intensity);
+    }
+    
     // Update social features (leaderboards, team stats)
     await socialProvider.updateLeaderboards(
       xp: gamificationProvider.userLevel.currentXP,
@@ -157,6 +168,34 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
     if (mounted) {
       context.go('/workout-summary?duration=$_workoutSecondsElapsed&exercises=${provider.activeWorkout?.exercises.length ?? 0}');
     }
+  }
+
+  List<String> _getMuscleGroupsFromWorkout(CustomWorkout? workout) {
+    if (workout == null) return [];
+    
+    // Map workout category to muscle groups
+    final category = workout.category.toLowerCase();
+    if (category.contains('push') || category.contains('chest') || category.contains('shoulder')) {
+      return ['Chest', 'Shoulders', 'Arms'];
+    } else if (category.contains('pull') || category.contains('back')) {
+      return ['Back', 'Arms'];
+    } else if (category.contains('leg')) {
+      return ['Legs'];
+    } else if (category.contains('full')) {
+      return ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms'];
+    } else if (category.contains('core') || category.contains('abs')) {
+      return ['Core'];
+    }
+    return ['Chest', 'Back', 'Legs']; // Default
+  }
+
+  WorkoutIntensity _estimateIntensity() {
+    // Estimate based on workout duration
+    final minutes = _workoutSecondsElapsed ~/ 60;
+    if (minutes < 20) return WorkoutIntensity.light;
+    if (minutes < 40) return WorkoutIntensity.moderate;
+    if (minutes < 60) return WorkoutIntensity.hard;
+    return WorkoutIntensity.extreme;
   }
 
   void _quitWorkout(CustomWorkoutProvider provider) {
