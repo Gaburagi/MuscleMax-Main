@@ -9,6 +9,7 @@ import '../providers/social_provider.dart';
 import '../providers/ai_workout_provider.dart';
 import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
+import 'workout_share_screen.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/level_up_dialog.dart';
 
@@ -166,8 +167,84 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
     provider.finishWorkout();
     
     if (mounted) {
-      context.go('/workout-summary?duration=$_workoutSecondsElapsed&exercises=${provider.activeWorkout?.exercises.length ?? 0}');
+      // Show share dialog option
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppColors.backgroundCard,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text(
+            '🎉 WORKOUT COMPLETE!',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'Bebas Neue',
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildStat('Duration', '${_workoutSecondsElapsed ~/ 60}m'),
+              _buildStat('Exercises', '${workout?.exercises.length ?? 0}'),
+              _buildStat('XP Gained', '+${result.xpGained}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => WorkoutShareScreen(
+                      workoutName: workout?.name ?? 'Custom Workout',
+                      durationSeconds: _workoutSecondsElapsed,
+                      exercisesCompleted: workout?.exercises.length ?? 0,
+                      caloriesBurned: (_workoutSecondsElapsed ~/ 60) * 5,
+                      xpGained: result.xpGained,
+                      achievementsUnlocked: result.unlockedAchievements,
+                      completedAt: DateTime.now(),
+                    ),
+                  ),
+                );
+              },
+              child: const Text('SHARE', style: TextStyle(color: AppColors.primaryRed)),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context.go('/home');
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryRed,
+              ),
+              child: const Text('DONE'),
+            ),
+          ],
+        ),
+      );
     }
+  }
+
+  Widget _buildStat(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: AppColors.textGray)),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   List<String> _getMuscleGroupsFromWorkout(CustomWorkout? workout) {

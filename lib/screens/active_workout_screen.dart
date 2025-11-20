@@ -8,6 +8,7 @@ import '../providers/social_provider.dart';
 import '../providers/ai_workout_provider.dart';
 import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
+import 'workout_share_screen.dart';
 import 'package:go_router/go_router.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
@@ -251,7 +252,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                             ),
                             Text(
                               achievement.description,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppColors.textGray,
                                 fontSize: 12,
                               ),
@@ -267,6 +268,26 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WorkoutShareScreen(
+                    workoutName: _workout!.name,
+                    durationSeconds: _workoutSecondsElapsed,
+                    exercisesCompleted: _workout!.exercises.length,
+                    caloriesBurned: _calculateCalories(),
+                    xpGained: result.xpGained,
+                    achievementsUnlocked: result.unlockedAchievements,
+                    completedAt: DateTime.now(),
+                  ),
+                ),
+              );
+            },
+            child: const Text('SHARE', style: TextStyle(color: AppColors.primaryRed)),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
@@ -324,7 +345,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: AppColors.textGray)),
+          Text(label, style: const TextStyle(color: AppColors.textGray)),
           Text(
             value,
             style: const TextStyle(

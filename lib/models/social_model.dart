@@ -186,6 +186,7 @@ class WorkoutPost {
   final List<String> likedBy; // User IDs who liked
   final List<WorkoutComment> comments;
   final String? note; // Optional user note
+  final List<String> imageUrls; // Attached images
 
   WorkoutPost({
     required this.id,
@@ -203,6 +204,7 @@ class WorkoutPost {
     required this.likedBy,
     required this.comments,
     this.note,
+    this.imageUrls = const [],
   });
 
   int get likeCount => likedBy.length;
@@ -224,6 +226,7 @@ class WorkoutPost {
     'likedBy': likedBy,
     'comments': comments.map((c) => c.toJson()).toList(),
     'note': note,
+    'imageUrls': imageUrls,
   };
 
   factory WorkoutPost.fromJson(Map<String, dynamic> json) {
@@ -245,6 +248,7 @@ class WorkoutPost {
           ?.map((c) => WorkoutComment.fromJson(c))
           .toList() ?? [],
       note: json['note'],
+      imageUrls: List<String>.from(json['imageUrls'] ?? []),
     );
   }
 
@@ -268,6 +272,7 @@ class WorkoutPost {
       likedBy: likedBy ?? this.likedBy,
       comments: comments ?? this.comments,
       note: note,
+      imageUrls: imageUrls,
     );
   }
 }

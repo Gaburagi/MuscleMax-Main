@@ -12,6 +12,7 @@ import 'workout_recommendations_screen.dart';
 import 'adaptive_difficulty_screen.dart';
 import 'recovery_dashboard_screen.dart';
 import 'goal_prediction_screen.dart';
+import 'workout_history_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -218,6 +219,18 @@ class HomeScreen extends StatelessWidget {
                       title: 'Friends',
                       icon: Icons.group,
                       onTap: () => context.go(AppRoutes.friends),
+                    ),
+                    _QuickActionCard(
+                      title: 'Share Workouts',
+                      icon: Icons.share,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const WorkoutHistoryScreen(),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),

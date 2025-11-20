@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,8 @@ import '../models/community_models.dart';
 import '../models/social_model.dart' as social;
 import '../utils/app_colors.dart';
 import 'team_battles_screen.dart';
+import 'create_post_screen.dart';
+import 'image_viewer_screen.dart';
 
 class CommunityScreen extends StatefulWidget {
   const CommunityScreen({super.key});
@@ -121,6 +124,30 @@ class _CommunityScreenState extends State<CommunityScreen> with SingleTickerProv
           _BadgesTab(key: ValueKey('badges_$_currentTabIndex')),
         ],
       ),
+      floatingActionButton: _currentTabIndex == 0 // Only show on Feed tab
+          ? FloatingActionButton.extended(
+              onPressed: () => _showCreatePostDialog(context),
+              backgroundColor: AppColors.primaryRed,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                'POST',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  void _showCreatePostDialog(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CreatePostScreen(),
+      ),
     );
   }
 }
@@ -145,7 +172,7 @@ class _WorkoutFeedTab extends StatelessWidget {
               color: AppColors.textGray.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'No workouts yet',
               style: TextStyle(
                 color: AppColors.textGray,
@@ -153,7 +180,7 @@ class _WorkoutFeedTab extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Complete a workout to share with friends!',
               style: TextStyle(
                 color: AppColors.textGray,
@@ -171,6 +198,7 @@ class _WorkoutFeedTab extends StatelessWidget {
       itemBuilder: (context, index) {
         final post = feed[index];
         final isLiked = post.likedBy.contains(socialProvider.currentUserId);
+        final isOwnPost = post.userId == socialProvider.currentUserId;
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
@@ -211,7 +239,7 @@ class _WorkoutFeedTab extends StatelessWidget {
                         ),
                         Text(
                           _formatTimestamp(post.timestamp),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.textGray,
                             fontSize: 12,
                           ),
@@ -219,13 +247,50 @@ class _WorkoutFeedTab extends StatelessWidget {
                       ],
                     ),
                   ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: AppColors.textGray),
+                    color: AppColors.backgroundCard,
+                    onSelected: (value) async {
+                      if (value == 'delete' && isOwnPost) {
+                        _showDeleteDialog(context, post.id, socialProvider);
+                      } else if (value == 'report') {
+                        _showReportDialog(context, post.id, socialProvider);
+                      }
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return [
+                        if (isOwnPost)
+                          const PopupMenuItem<String>(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red, size: 20),
+                                SizedBox(width: 12),
+                                Text('Delete Post', style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                        if (!isOwnPost)
+                          const PopupMenuItem<String>(
+                            value: 'report',
+                            child: Row(
+                              children: [
+                                Icon(Icons.flag, color: Colors.orange, size: 20),
+                                SizedBox(width: 12),
+                                Text('Report Post', style: TextStyle(color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                      ];
+                    },
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
               // Workout name
               Row(
                 children: [
-                  Icon(Icons.fitness_center, color: AppColors.primaryRed, size: 20),
+                  const Icon(Icons.fitness_center, color: AppColors.primaryRed, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -327,6 +392,11 @@ class _WorkoutFeedTab extends StatelessWidget {
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                 ),
               ],
+              // Images
+              if (post.imageUrls.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _buildImageGrid(context, post.imageUrls),
+              ],
               const SizedBox(height: 12),
               const Divider(color: Colors.grey, height: 1),
               const SizedBox(height: 8),
@@ -354,18 +424,39 @@ class _WorkoutFeedTab extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 20),
-                  Row(
-                    children: [
-                      Icon(Icons.comment_outlined, color: AppColors.textGray, size: 20),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${post.commentCount}',
-                        style: TextStyle(color: AppColors.textGray, fontSize: 14),
-                      ),
-                    ],
+                  InkWell(
+                    onTap: () => _showCommentsDialog(context, post, socialProvider),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.comment_outlined, color: AppColors.textGray, size: 20),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${post.commentCount}',
+                          style: const TextStyle(color: AppColors.textGray, fontSize: 14),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
+              // Show preview of comments
+              if (post.comments.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Divider(color: Colors.grey, height: 1),
+                const SizedBox(height: 8),
+                ...post.comments.take(2).map((comment) => _buildCommentPreview(comment)),
+                if (post.comments.length > 2)
+                  TextButton(
+                    onPressed: () => _showCommentsDialog(context, post, socialProvider),
+                    child: Text(
+                      'View all ${post.comments.length} comments',
+                      style: const TextStyle(
+                        color: AppColors.textGray,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+              ],
             ],
           ),
         );
@@ -394,6 +485,730 @@ class _WorkoutFeedTab extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCommentPreview(social.WorkoutComment comment) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 12,
+            backgroundColor: AppColors.primaryRed.withOpacity(0.3),
+            child: Text(
+              comment.userName[0].toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      comment.userName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      _formatTimestamp(comment.timestamp),
+                      style: const TextStyle(
+                        color: AppColors.textGray,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  comment.text,
+                  style: const TextStyle(
+                    color: AppColors.textGray,
+                    fontSize: 12,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCommentsDialog(
+    BuildContext context,
+    social.WorkoutPost post,
+    SocialProvider socialProvider,
+  ) {
+    final commentController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundDark,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Comments',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${post.commentCount}',
+                      style: const TextStyle(
+                        color: AppColors.textGray,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: Colors.grey, height: 1),
+              // Comments list
+              Expanded(
+                child: post.comments.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No comments yet\nBe the first to comment!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: AppColors.textGray,
+                            fontSize: 14,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: post.comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = post.comments[index];
+                          final isOwnComment = comment.userId == socialProvider.currentUserId;
+                          return _buildCommentTile(
+                            comment,
+                            isOwnComment,
+                            post.id,
+                            socialProvider,
+                            context,
+                          );
+                        },
+                      ),
+              ),
+              // Comment input
+              Container(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 12,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 12,
+                ),
+                decoration: const BoxDecoration(
+                  color: AppColors.backgroundCard,
+                  border: Border(top: BorderSide(color: Colors.grey, width: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: commentController,
+                        style: const TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Add a comment...',
+                          hintStyle: const TextStyle(color: AppColors.textGray),
+                          filled: true,
+                          fillColor: AppColors.backgroundDark,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () async {
+                        if (commentController.text.trim().isNotEmpty) {
+                          await socialProvider.commentOnPost(
+                            post.id,
+                            commentController.text.trim(),
+                          );
+                          commentController.clear();
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        }
+                      },
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.redGradient,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.send,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCommentTile(
+    social.WorkoutComment comment,
+    bool isOwnComment,
+    String postId,
+    SocialProvider socialProvider,
+    BuildContext context,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundCard,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.primaryRed.withOpacity(0.3),
+                child: Text(
+                  comment.userName[0].toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      comment.userName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      _formatTimestamp(comment.timestamp),
+                      style: const TextStyle(
+                        color: AppColors.textGray,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: AppColors.textGray, size: 18),
+                color: AppColors.backgroundCard,
+                onSelected: (value) async {
+                  if (value == 'delete' && isOwnComment) {
+                    await socialProvider.deleteComment(postId, comment.id);
+                  } else if (value == 'report') {
+                    _showReportCommentDialog(context, comment.id, socialProvider);
+                  }
+                },
+                itemBuilder: (BuildContext context) {
+                  return [
+                    if (isOwnComment)
+                      const PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red, size: 18),
+                            SizedBox(width: 10),
+                            Text('Delete', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                    if (!isOwnComment)
+                      const PopupMenuItem<String>(
+                        value: 'report',
+                        child: Row(
+                          children: [
+                            Icon(Icons.flag, color: Colors.orange, size: 18),
+                            SizedBox(width: 10),
+                            Text('Report', style: TextStyle(color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                  ];
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            comment.text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(
+    BuildContext context,
+    String postId,
+    SocialProvider socialProvider,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.backgroundCard,
+        title: const Text(
+          'Delete Post?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'This action cannot be undone. Are you sure you want to delete this post?',
+          style: TextStyle(color: AppColors.textGray),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'CANCEL',
+              style: TextStyle(color: AppColors.textGray),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await socialProvider.deletePost(postId);
+              if (context.mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Post deleted'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text(
+              'DELETE',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showReportDialog(
+    BuildContext context,
+    String postId,
+    SocialProvider socialProvider,
+  ) {
+    String? selectedReason;
+    final detailsController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: AppColors.backgroundCard,
+          title: const Text(
+            'Report Post',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Why are you reporting this post?',
+                  style: TextStyle(color: AppColors.textGray, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                ...[
+                  'Spam',
+                  'Harassment',
+                  'Inappropriate Content',
+                  'False Information',
+                  'Other',
+                ].map((reason) => RadioListTile<String>(
+                      title: Text(
+                        reason,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: reason,
+                      groupValue: selectedReason,
+                      activeColor: AppColors.primaryRed,
+                      onChanged: (value) => setState(() => selectedReason = value),
+                    )),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: detailsController,
+                  maxLines: 3,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Additional details (optional)',
+                    hintStyle: const TextStyle(color: AppColors.textGray),
+                    filled: true,
+                    fillColor: AppColors.backgroundDark,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'CANCEL',
+                style: TextStyle(color: AppColors.textGray),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: selectedReason == null
+                  ? null
+                  : () async {
+                      await socialProvider.reportPost(
+                        postId,
+                        selectedReason!,
+                        detailsController.text.trim(),
+                      );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Report submitted. Thank you for helping keep our community safe.'),
+                            backgroundColor: AppColors.primaryRed,
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryRed,
+              ),
+              child: const Text(
+                'SUBMIT',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageGrid(BuildContext context, List<String> imageUrls) {
+    if (imageUrls.isEmpty) return const SizedBox.shrink();
+
+    if (imageUrls.length == 1) {
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ImageViewerScreen(
+                imageUrls: imageUrls,
+                initialIndex: 0,
+              ),
+            ),
+          );
+        },
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            File(imageUrls[0]),
+            width: double.infinity,
+            height: 300,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                height: 300,
+                color: AppColors.backgroundCard,
+                child: const Center(
+                  child: Icon(Icons.broken_image, color: AppColors.textGray, size: 48),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    if (imageUrls.length == 2) {
+      return Row(
+        children: imageUrls.asMap().entries.map((entry) {
+          final index = entry.key;
+          final url = entry.value;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: index == 0 ? 4 : 0),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ImageViewerScreen(
+                        imageUrls: imageUrls,
+                        initialIndex: index,
+                      ),
+                    ),
+                  );
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(url),
+                    height: 200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 200,
+                        color: AppColors.backgroundCard,
+                        child: const Center(
+                          child: Icon(Icons.broken_image, color: AppColors.textGray),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      );
+    }
+
+    // 3 or 4 images - grid layout
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 4,
+      ),
+      itemCount: imageUrls.length > 4 ? 4 : imageUrls.length,
+      itemBuilder: (gridContext, index) {
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ImageViewerScreen(
+                  imageUrls: imageUrls,
+                  initialIndex: index,
+                ),
+              ),
+            );
+          },
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.file(
+                  File(imageUrls[index]),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: AppColors.backgroundCard,
+                      child: const Center(
+                        child: Icon(Icons.broken_image, color: AppColors.textGray),
+                      ),
+                    );
+                  },
+                ),
+                // Show "+X more" on last image if more than 4
+                if (index == 3 && imageUrls.length > 4)
+                  Container(
+                    color: Colors.black54,
+                    child: Center(
+                      child: Text(
+                        '+${imageUrls.length - 4}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showReportCommentDialog(
+    BuildContext context,
+    String commentId,
+    SocialProvider socialProvider,
+  ) {
+    String? selectedReason;
+    final detailsController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: AppColors.backgroundCard,
+          title: const Text(
+            'Report Comment',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Why are you reporting this comment?',
+                  style: TextStyle(color: AppColors.textGray, fontSize: 14),
+                ),
+                const SizedBox(height: 12),
+                ...[
+                  'Spam',
+                  'Harassment',
+                  'Inappropriate Content',
+                  'False Information',
+                  'Other',
+                ].map((reason) => RadioListTile<String>(
+                      title: Text(
+                        reason,
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                      value: reason,
+                      groupValue: selectedReason,
+                      activeColor: AppColors.primaryRed,
+                      onChanged: (value) => setState(() => selectedReason = value),
+                    )),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: detailsController,
+                  maxLines: 3,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Additional details (optional)',
+                    hintStyle: const TextStyle(color: AppColors.textGray),
+                    filled: true,
+                    fillColor: AppColors.backgroundDark,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'CANCEL',
+                style: TextStyle(color: AppColors.textGray),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: selectedReason == null
+                  ? null
+                  : () async {
+                      await socialProvider.reportComment(
+                        commentId,
+                        selectedReason!,
+                        detailsController.text.trim(),
+                      );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Report submitted. Thank you.'),
+                            backgroundColor: AppColors.primaryRed,
+                          ),
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryRed,
+              ),
+              child: const Text(
+                'SUBMIT',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -584,7 +1399,7 @@ class _SharedWorkoutsTabState extends State<_SharedWorkoutsTab> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Icon(Icons.fitness_center, size: 16, color: AppColors.primaryRed),
+                            const Icon(Icons.fitness_center, size: 16, color: AppColors.primaryRed),
                             const SizedBox(width: 6),
                             Text(
                               '${workout.exerciseCount} Exercises',
@@ -739,7 +1554,7 @@ class _ChallengesTab extends StatelessWidget {
               color: AppColors.textGray.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'No active challenges',
               style: TextStyle(
                 color: AppColors.textGray,
@@ -919,7 +1734,7 @@ class _ChallengesTab extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'vs $opponentName',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textGray,
                       fontSize: 14,
                     ),
@@ -931,7 +1746,7 @@ class _ChallengesTab extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'You',
                               style: TextStyle(
                                 color: AppColors.textGray,
@@ -967,7 +1782,7 @@ class _ChallengesTab extends StatelessWidget {
                           children: [
                             Text(
                               opponentName,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppColors.textGray,
                                 fontSize: 12,
                               ),
@@ -1003,7 +1818,7 @@ class _ChallengesTab extends StatelessWidget {
                     children: [
                       Text(
                         'Expires: ${DateFormat('MMM d').format(challenge.expiresAt)}',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textGray,
                           fontSize: 12,
                         ),
@@ -1585,7 +2400,7 @@ class _NewLeaderboardTabState extends State<_NewLeaderboardTab> {
                         color: AppColors.textGray.withOpacity(0.5),
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      const Text(
                         'No rankings yet',
                         style: TextStyle(
                           color: AppColors.textGray,
@@ -1736,7 +2551,7 @@ class _LeaderboardEntryCard extends StatelessWidget {
       child: Center(
         child: Text(
           '${entry.rank}',
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -1786,7 +2601,7 @@ class _LeaderboardEntryCard extends StatelessWidget {
                 if (showLevel && entry.level != null)
                   Text(
                     'Lvl ${entry.level} • ${entry.title}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textGray,
                       fontSize: 11,
                     ),

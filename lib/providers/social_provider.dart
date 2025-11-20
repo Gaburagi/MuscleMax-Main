@@ -5,8 +5,8 @@ import '../models/social_model.dart';
 
 class SocialProvider with ChangeNotifier {
   // Current user info
-  String _currentUserId = 'user_001';
-  String _currentUserName = 'You';
+  final String _currentUserId = 'user_001';
+  final String _currentUserName = 'You';
   
   // Leaderboards
   List<LeaderboardEntry> _xpLeaderboard = [];
@@ -362,6 +362,7 @@ class SocialProvider with ChangeNotifier {
     int xpGained = 0,
     List<String> achievements = const [],
     String? note,
+    List<String> imageUrls = const [],
   }) async {
     final post = WorkoutPost(
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
@@ -378,6 +379,7 @@ class SocialProvider with ChangeNotifier {
       likedBy: [],
       comments: [],
       note: note,
+      imageUrls: imageUrls,
     );
     
     _workoutFeed.insert(0, post);
@@ -421,6 +423,64 @@ class SocialProvider with ChangeNotifier {
       await _saveWorkoutFeed();
       notifyListeners();
     }
+  }
+
+  Future<void> deletePost(String postId) async {
+    _workoutFeed.removeWhere((p) => p.id == postId);
+    await _saveWorkoutFeed();
+    notifyListeners();
+  }
+
+  Future<void> deleteComment(String postId, String commentId) async {
+    final index = _workoutFeed.indexWhere((p) => p.id == postId);
+    if (index != -1) {
+      final post = _workoutFeed[index];
+      final comments = List<WorkoutComment>.from(post.comments);
+      comments.removeWhere((c) => c.id == commentId);
+      
+      _workoutFeed[index] = post.copyWith(comments: comments);
+      await _saveWorkoutFeed();
+      notifyListeners();
+    }
+  }
+
+  Future<void> reportPost(String postId, String reason, String details) async {
+    // In a real app, this would send to a backend moderation queue
+    // For now, we'll just log it locally
+    final prefs = await SharedPreferences.getInstance();
+    final reports = prefs.getStringList('reported_posts') ?? [];
+    
+    final reportData = {
+      'postId': postId,
+      'reason': reason,
+      'details': details,
+      'reportedBy': _currentUserId,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    reports.add(jsonEncode(reportData));
+    await prefs.setStringList('reported_posts', reports);
+    
+    debugPrint('Post reported: $postId - Reason: $reason');
+  }
+
+  Future<void> reportComment(String commentId, String reason, String details) async {
+    // Similar to reportPost but for comments
+    final prefs = await SharedPreferences.getInstance();
+    final reports = prefs.getStringList('reported_comments') ?? [];
+    
+    final reportData = {
+      'commentId': commentId,
+      'reason': reason,
+      'details': details,
+      'reportedBy': _currentUserId,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    
+    reports.add(jsonEncode(reportData));
+    await prefs.setStringList('reported_comments', reports);
+    
+    debugPrint('Comment reported: $commentId - Reason: $reason');
   }
 
   // Team methods

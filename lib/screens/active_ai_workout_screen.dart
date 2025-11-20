@@ -7,6 +7,7 @@ import '../providers/gamification_provider.dart';
 import '../providers/social_provider.dart';
 // import '../providers/workout_history_provider.dart'; // Will be created later
 import '../utils/app_colors.dart';
+import 'workout_share_screen.dart';
 
 class ActiveAIWorkoutScreen extends StatefulWidget {
   final AIGeneratedWorkout workout;
@@ -162,7 +163,7 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.primaryRed,
                   shape: BoxShape.circle,
                 ),
@@ -184,7 +185,7 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
                     ),
                     Text(
                       _currentExercise.muscleGroup,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 14,
                       ),
@@ -252,7 +253,7 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 12,
             letterSpacing: 1.2,
@@ -300,7 +301,7 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
         const SizedBox(width: 12),
         Text(
           '$label:',
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 13,
           ),
@@ -513,6 +514,27 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
           ],
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WorkoutShareScreen(
+                    workoutName: widget.workout.name,
+                    durationSeconds: _elapsedSeconds,
+                    exercisesCompleted: widget.workout.exercises.length,
+                    caloriesBurned: widget.workout.estimatedCalories,
+                    xpGained: result.xpGained,
+                    achievementsUnlocked: result.unlockedAchievements,
+                    note: widget.workout.aiReasoning,
+                    completedAt: DateTime.now(),
+                  ),
+                ),
+              );
+            },
+            child: const Text('SHARE', style: TextStyle(color: AppColors.primaryRed)),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
@@ -534,7 +556,7 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: AppColors.textGray)),
+          Text(label, style: const TextStyle(color: AppColors.textGray)),
           Text(
             value,
             style: const TextStyle(
@@ -560,7 +582,7 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('CANCEL', style: TextStyle(color: AppColors.textGray)),
+            child: const Text('CANCEL', style: TextStyle(color: AppColors.textGray)),
           ),
           ElevatedButton(
             onPressed: () {
