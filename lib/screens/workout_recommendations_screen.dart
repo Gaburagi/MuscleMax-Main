@@ -4,6 +4,7 @@ import '../models/ai_models.dart';
 import '../providers/ai_workout_provider.dart';
 import '../providers/custom_workout_provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/body_measurement_provider.dart';
 import '../utils/app_colors.dart';
 import 'quick_workout_generator_screen.dart';
 import 'active_ai_workout_screen.dart';
@@ -42,8 +43,8 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
         ? customWorkoutProvider.completedWorkouts.last.completedAt
         : null;
     
-    // Generate recommendations
-    final recommendations = aiProvider.generateRecommendations(
+    // Generate base recommendations
+    var recommendations = aiProvider.generateRecommendations(
       recentWorkoutCount: recentWorkoutCount,
       recentMuscleGroups: recentMuscleGroups,
       lastWorkoutDate: lastWorkoutDate,
@@ -52,10 +53,94 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
       availableTime: 60,
     );
     
+    // ADJUST RECOMMENDATIONS BASED ON GOAL PROGRESS
+    if (mounted) {
+      final measurementProvider = context.read<BodyMeasurementProvider>();
+      recommendations = _adjustRecommendationsForGoals(recommendations, measurementProvider);
+    }
+    
     setState(() {
       _recommendations = recommendations;
       _isLoading = false;
     });
+  }
+  
+  List<WorkoutRecommendation> _adjustRecommendationsForGoals(
+    List<WorkoutRecommendation> recommendations,
+    BodyMeasurementProvider measurementProvider,
+  ) {
+    final goals = measurementProvider.goals.where((g) => !g.isCompleted).toList();
+    if (goals.isEmpty) return recommendations;
+    
+    // Check weight loss goals
+    final weightLossGoals = goals.where((g) => g.type == 'weight' && g.targetValue < g.currentValue);
+    final isBehindOnWeightLoss = weightLossGoals.any((g) {
+      final daysRemaining = g.daysRemaining;
+      final progressPercentage = g.progress;
+      final expectedProgress = (1 - (daysRemaining / 90)) * 100; // Assuming 90-day goals
+      return progressPercentage < expectedProgress - 10; // Behind by 10%
+    });
+    
+    // Check muscle gain goals (body fat or strength)
+    final strengthGoals = goals.where((g) => g.type == 'strength' || (g.type == 'body_fat' && g.targetValue > g.currentValue));
+    final isBehindOnStrength = strengthGoals.any((g) {
+      final daysRemaining = g.daysRemaining;
+      final progressPercentage = g.progress;
+      final expectedProgress = (1 - (daysRemaining / 90)) * 100;
+      return progressPercentage < expectedProgress - 10;
+    });
+    
+    final adjusted = recommendations.map((rec) {
+      var newRec = rec;
+      
+      // If behind on weight loss: increase cardio intensity and duration
+      if (isBehindOnWeightLoss) {
+        if (rec.workoutName.toLowerCase().contains('cardio') || 
+            rec.workoutName.toLowerCase().contains('hiit') ||
+            rec.workoutName.toLowerCase().contains('burn')) {
+          // Boost cardio recommendations
+          newRec = WorkoutRecommendation(
+            workoutId: rec.workoutId,
+            workoutName: rec.workoutName,
+            estimatedDuration: (rec.estimatedDuration * 1.2).round(), // 20% longer
+            intensity: rec.intensity == WorkoutIntensity.moderate ? WorkoutIntensity.hard : rec.intensity,
+            muscleGroups: rec.muscleGroups,
+            estimatedCalories: (rec.estimatedCalories * 1.3).round(), // 30% more calories
+            confidenceScore: rec.confidenceScore + 0.15, // Boost priority
+            reasoning: '${rec.reasoning}\n\n⚠️ GOAL ADJUSTMENT: Increased intensity to help you catch up on your weight loss goal.',
+            benefits: [...rec.benefits, 'Accelerated fat loss'],
+            exerciseCount: rec.exerciseCount,
+          );
+        }
+      }
+      
+      // If behind on strength: prioritize heavy compound lifts
+      if (isBehindOnStrength) {
+        if (rec.workoutName.toLowerCase().contains('strength') ||
+            rec.workoutName.toLowerCase().contains('power') ||
+            rec.workoutName.toLowerCase().contains('heavy')) {
+          newRec = WorkoutRecommendation(
+            workoutId: rec.workoutId,
+            workoutName: rec.workoutName,
+            estimatedDuration: rec.estimatedDuration,
+            intensity: rec.intensity == WorkoutIntensity.moderate ? WorkoutIntensity.hard : WorkoutIntensity.extreme,
+            muscleGroups: rec.muscleGroups,
+            estimatedCalories: rec.estimatedCalories,
+            confidenceScore: rec.confidenceScore + 0.15, // Boost priority
+            reasoning: '${rec.reasoning}\n\n⚠️ GOAL ADJUSTMENT: Increased intensity to accelerate strength gains and help you reach your goals faster.',
+            benefits: [...rec.benefits, 'Rapid strength increase'],
+            exerciseCount: rec.exerciseCount,
+          );
+        }
+      }
+      
+      return newRec;
+    }).toList();
+    
+    // Re-sort by confidence score after adjustments
+    adjusted.sort((a, b) => b.confidenceScore.compareTo(a.confidenceScore));
+    
+    return adjusted;
   }
 
   List<String> _getRecentMuscleGroups(CustomWorkoutProvider provider) {
@@ -112,7 +197,7 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryRed),
           ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             'Analyzing your workout history...',
             style: TextStyle(
               color: AppColors.textGray,
@@ -145,7 +230,7 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
               color: AppColors.textGray.withOpacity(0.5),
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               'Complete a few workouts first',
               style: TextStyle(
                 color: AppColors.textWhite,
@@ -154,7 +239,7 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'AI needs some workout data to generate personalized recommendations',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -191,13 +276,40 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
       itemCount: _recommendations.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
-          return _buildHeader();
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
+                ),
+              );
+            },
+            child: _buildHeader(),
+          );
         }
         
         final recommendation = _recommendations[index - 1];
-        return _RecommendationCard(
-          recommendation: recommendation,
-          rank: index,
+        // Staggered fade-in animation for each card
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: Duration(milliseconds: 400 + (index * 100)),
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.translate(
+                offset: Offset(0, 30 * (1 - value)),
+                child: child,
+              ),
+            );
+          },
+          child: _RecommendationCard(
+            recommendation: recommendation,
+            rank: index,
+          ),
         );
       },
     );
@@ -220,11 +332,11 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
-              const SizedBox(width: 12),
-              const Expanded(
+              Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Expanded(
                 child: Text(
                   'Personalized For You',
                   style: TextStyle(
@@ -494,7 +606,7 @@ class _RecommendationCard extends StatelessWidget {
                       ),
                       child: Text(
                         muscle,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textWhite,
                           fontSize: 11,
                         ),
@@ -518,7 +630,7 @@ class _RecommendationCard extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.psychology,
                         color: AppColors.textGray,
                         size: 18,
@@ -527,7 +639,7 @@ class _RecommendationCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           recommendation.reasoning,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.textGray,
                             fontSize: 13,
                             height: 1.4,
@@ -548,16 +660,16 @@ class _RecommendationCard extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.check_circle,
-                            color: const Color(0xFF4CAF50),
+                            color: Color(0xFF4CAF50),
                             size: 16,
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               benefit,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppColors.textWhite,
                                 fontSize: 13,
                               ),
@@ -626,7 +738,7 @@ class _StatChip extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textGray,
               fontSize: 12,
             ),

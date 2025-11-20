@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'utils/app_theme.dart';
 import 'utils/routes.dart';
 import 'providers/user_provider.dart';
+import 'providers/profile_stats_provider.dart';
 import 'providers/workout_provider.dart';
 import 'providers/nutrition_provider.dart';
 import 'providers/custom_workout_provider.dart';
@@ -41,6 +42,15 @@ class _MuscleMaxAppState extends State<MuscleMaxApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()..loadUser()),
+        ChangeNotifierProxyProvider<UserProvider, ProfileStatsProvider>(
+          create: (context) => ProfileStatsProvider(),
+          update: (context, userProvider, profileStatsProvider) {
+            if (userProvider.user != null) {
+              profileStatsProvider!.setUser(userProvider.user!);
+            }
+            return profileStatsProvider!;
+          },
+        ),
         ChangeNotifierProvider(create: (_) => WorkoutProvider()),
         ChangeNotifierProvider(create: (_) => NutritionProvider()..loadNutritionData()),
         ChangeNotifierProvider(create: (_) => CommunityProvider()),

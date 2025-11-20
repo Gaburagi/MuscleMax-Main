@@ -71,36 +71,121 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Overall Readiness Score
-            _buildReadinessCard(readinessScore, restDayRec),
+            // Overall Readiness Score - Fade in animation
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 500),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildReadinessCard(readinessScore, restDayRec),
+            ),
             const SizedBox(height: 20),
             
-            // Muscle Recovery Heatmap
-            _buildSectionHeader('Muscle Recovery Status', Icons.healing),
-            const SizedBox(height: 12),
-            _buildMuscleRecoveryGrid(muscleRecovery),
+            // Muscle Recovery Heatmap - Staggered fade in
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 600),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('Muscle Recovery Status', Icons.healing),
+                  const SizedBox(height: 12),
+                  _buildMuscleRecoveryGrid(muscleRecovery),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
             
-            // Overtraining Warning
+            // Overtraining Warning - Fade in with delay
             if (overtraining.riskLevel > 30) ...[
-              _buildSectionHeader('Overtraining Alert', Icons.warning),
-              const SizedBox(height: 12),
-              _buildOvertrainingCard(overtraining),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 700),
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader('Overtraining Alert', Icons.warning),
+                    const SizedBox(height: 12),
+                    _buildOvertrainingCard(overtraining),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
             ],
             
-            // Deload Recommendation
+            // Deload Recommendation - Fade in with delay
             if (deloadRec.shouldDeload) ...[
-              _buildSectionHeader('Deload Week Recommended', Icons.schedule),
-              const SizedBox(height: 12),
-              _buildDeloadCard(deloadRec),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: const Duration(milliseconds: 800),
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 20 * (1 - value)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionHeader('Deload Week Recommended', Icons.schedule),
+                    const SizedBox(height: 12),
+                    _buildDeloadCard(deloadRec),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
             ],
             
-            // Rest Day Recommendation
-            _buildSectionHeader('Rest Day Status', Icons.bed),
-            const SizedBox(height: 12),
-            _buildRestDayCard(restDayRec),
+            // Rest Day Recommendation - Final fade in
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 900),
+              builder: (context, value, child) {
+                return Opacity(
+                  opacity: value,
+                  child: Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: child,
+                  ),
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader('Rest Day Status', Icons.bed),
+                  const SizedBox(height: 12),
+                  _buildRestDayCard(restDayRec),
+                ],
+              ),
+            ),
             
             const SizedBox(height: 100), // Space for bottom button
           ],
@@ -177,7 +262,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Overall Readiness',
                     style: TextStyle(
                       color: AppColors.textGray,
@@ -234,12 +319,12 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.info, color: Colors.orange, size: 20),
+                  const Icon(Icons.info, color: Colors.orange, size: 20),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Rest day recommended: ${restRec.alternativeActivity}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.orange,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -339,7 +424,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
           const SizedBox(height: 8),
           Text(
             muscle.recommendation,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textGray,
               fontSize: 11,
             ),
@@ -421,7 +506,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
           ),
           const SizedBox(height: 12),
           if (indicators.indicators.isNotEmpty) ...[
-            Text(
+            const Text(
               'Indicators:',
               style: TextStyle(
                 color: AppColors.textGray,
@@ -439,7 +524,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
                   Expanded(
                     child: Text(
                       indicator,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textWhite,
                         fontSize: 13,
                       ),
@@ -500,14 +585,14 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
                   color: Colors.purple.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.calendar_today, color: Colors.purple),
+                child: const Icon(Icons.calendar_today, color: Colors.purple),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Deload Week',
                       style: TextStyle(
                         color: Colors.purple,
@@ -517,7 +602,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
                     ),
                     Text(
                       'Start: ${DateFormat('MMM d').format(deload.recommendedStartDate)}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 12,
                       ),
@@ -536,7 +621,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
             ),
             child: Text(
               deload.reason,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.purple,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -564,7 +649,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Guidelines:',
             style: TextStyle(
               color: AppColors.textGray,
@@ -578,12 +663,12 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.check_circle, size: 16, color: Colors.green),
+                const Icon(Icons.check_circle, size: 16, color: Colors.green),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     guideline,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textWhite,
                       fontSize: 12,
                     ),
@@ -618,7 +703,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textGray,
               fontSize: 11,
             ),
@@ -681,7 +766,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
                     ),
                     Text(
                       '${restRec.urgency.toUpperCase()} Priority',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 12,
                       ),
@@ -701,7 +786,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
                 Expanded(
                   child: Text(
                     reason,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textWhite,
                       fontSize: 13,
                     ),

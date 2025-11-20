@@ -16,8 +16,8 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
   int _availableMinutes = 45;
   WorkoutIntensity _intensity = WorkoutIntensity.moderate;
   String _goal = 'general_fitness';
-  List<String> _selectedMuscles = [];
-  List<String> _selectedEquipment = [];
+  final List<String> _selectedMuscles = [];
+  final List<String> _selectedEquipment = [];
   bool _isGenerating = false;
 
   final List<String> _allMuscles = ['Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core'];
@@ -88,18 +88,18 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: AppColors.primaryRed,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.psychology, color: Colors.white, size: 32),
               ),
               const SizedBox(width: 16),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'AI-Powered Workouts',
                       style: TextStyle(
                         fontFamily: 'Bebas Neue',
@@ -183,7 +183,7 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
                   });
                 },
               ),
-              Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('30 min', style: TextStyle(color: AppColors.textGray, fontSize: 12)),
@@ -332,7 +332,7 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
         const SizedBox(height: 8),
         Text(
           _selectedMuscles.isEmpty ? 'Leave empty for full body workout' : '${_selectedMuscles.length} selected',
-          style: TextStyle(color: AppColors.textGray, fontSize: 12),
+          style: const TextStyle(color: AppColors.textGray, fontSize: 12),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -392,7 +392,7 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
         const SizedBox(height: 8),
         Text(
           _selectedEquipment.isEmpty ? 'Leave empty for any equipment' : '${_selectedEquipment.length} selected',
-          style: TextStyle(color: AppColors.textGray, fontSize: 12),
+          style: const TextStyle(color: AppColors.textGray, fontSize: 12),
         ),
         const SizedBox(height: 12),
         Wrap(
@@ -436,9 +436,9 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      child: Row(
+      child: const Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
+        children: [
           Icon(Icons.auto_awesome, size: 24),
           SizedBox(width: 12),
           Text(
@@ -456,35 +456,190 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
 
   Widget _buildGeneratingView() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(color: AppColors.primaryRed),
-          const SizedBox(height: 24),
-          const Text(
-            'AI is crafting your perfect workout...',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.0, end: 1.0),
+        duration: const Duration(milliseconds: 600),
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.scale(
+              scale: 0.8 + (0.2 * value),
+              child: child,
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Analyzing your preferences',
-            style: TextStyle(
-              color: AppColors.textGray,
-              fontSize: 13,
+          );
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Pulsing progress indicator
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(seconds: 1),
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: 1.0 + (0.1 * (value > 0.5 ? 1 - value : value) * 2),
+                  child: child,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.primaryRed.withOpacity(0.3),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+                child: const CircularProgressIndicator(
+                  color: AppColors.primaryRed,
+                  strokeWidth: 3,
+                ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            const Text(
+              'AI is crafting your perfect workout...',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Animated dots
+            TweenAnimationBuilder<int>(
+              tween: IntTween(begin: 0, end: 3),
+              duration: const Duration(milliseconds: 1500),
+              builder: (context, value, child) {
+                return Text(
+                  'Analyzing your preferences${'.' * (value % 4)}',
+                  style: const TextStyle(
+                    color: AppColors.textGray,
+                    fontSize: 13,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Future<void> _generateWorkout() async {
-    setState(() => _isGenerating = true);
-
     final aiProvider = context.read<AIWorkoutProvider>();
+    
+    // Check recovery status before generating
+    final recoveryStatus = aiProvider.getMuscleGroupRecoveryStatus();
+    final fatiguedMuscles = <String>[];
+    
+    if (_selectedMuscles.isNotEmpty) {
+      for (final muscle in _selectedMuscles) {
+        final status = recoveryStatus.firstWhere(
+          (s) => s.muscleGroup == muscle,
+          orElse: () => MuscleGroupRecovery(
+            muscleGroup: muscle,
+            fatigueLevel: 0,
+            lastWorked: DateTime.now(),
+            hoursUntilRecovered: 0,
+            readyToTrain: true,
+            recommendation: 'Ready',
+            workoutsThisWeek: 0,
+            weeklyVolumeLoad: 0,
+          ),
+        );
+        
+        if (status.fatigueLevel > 70) {
+          fatiguedMuscles.add(muscle);
+        }
+      }
+    }
+    
+    // Show warning if fatigued muscles selected
+    if (fatiguedMuscles.isNotEmpty && mounted) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: AppColors.backgroundCard,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 28),
+              const SizedBox(width: 12),
+              const Text(
+                'Recovery Warning',
+                style: TextStyle(color: Colors.white, fontSize: 20),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'The following muscle groups are still fatigued:',
+                style: const TextStyle(color: AppColors.textGray, fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+              ...fatiguedMuscles.map((muscle) {
+                final status = recoveryStatus.firstWhere((s) => s.muscleGroup == muscle);
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryRed,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '$muscle (${status.fatigueLevel.toInt()}% fatigue)',
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3)),
+                ),
+                child: const Text(
+                  '💡 Tip: Training fatigued muscles may increase injury risk. Consider choosing different muscle groups or reducing intensity.',
+                  style: TextStyle(color: Colors.amber, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('CANCEL', style: TextStyle(color: AppColors.textGray)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('CONTINUE ANYWAY', style: TextStyle(color: AppColors.primaryRed)),
+            ),
+          ],
+        ),
+      );
+      
+      if (proceed != true) return;
+    }
+    
+    setState(() => _isGenerating = true);
     
     final request = WorkoutGenerationRequest(
       availableMinutes: _availableMinutes,

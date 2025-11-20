@@ -70,8 +70,30 @@ class UserProvider extends ChangeNotifier {
     );
 
     debugPrint('Updating profile - age: ${_user!.age}, height: ${_user!.height}, weight: ${_user!.weight}');
-    debugPrint('Profile complete check: ${isProfileComplete}');
+    debugPrint('Profile complete check: $isProfileComplete');
     
+    await saveUser(_user!);
+  }
+
+  Future<void> updateProfileCustomization({
+    String? profilePhoto,
+    List<String>? coverPhotos,
+    String? pronouns,
+    String? bio,
+    ProfileTheme? profileTheme,
+    String? profileFrame,
+  }) async {
+    if (_user == null) return;
+
+    _user = _user!.copyWith(
+      profilePhoto: profilePhoto,
+      coverPhotos: coverPhotos,
+      pronouns: pronouns,
+      bio: bio,
+      profileTheme: profileTheme,
+      profileFrame: profileFrame,
+    );
+
     await saveUser(_user!);
   }
 

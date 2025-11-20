@@ -9,7 +9,7 @@ import '../screens/otp_verification_screen.dart';
 import '../screens/profile_setup_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/training_screen.dart';
-import '../screens/profile_screen.dart';
+import '../screens/profile_screen_new.dart';
 import '../screens/workout_detail_screen.dart';
 import '../screens/active_workout_screen.dart';
 import '../screens/workout_summary_screen.dart';
@@ -110,7 +110,7 @@ class AppRoutes {
         path: profile,
         pageBuilder: (context, state) => _buildPageWithSlideTransition(
           state,
-          const ProfileScreen(),
+          const ProfileScreenNew(),
           3,
         ),
       ),
