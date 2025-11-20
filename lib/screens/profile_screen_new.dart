@@ -21,6 +21,7 @@ class ProfileScreenNew extends StatefulWidget {
 class _ProfileScreenNewState extends State<ProfileScreenNew> {
   final PageController _coverPageController = PageController();
   int _currentCoverIndex = 0;
+  double _scrollOffset = 0;
 
   @override
   void dispose() {
@@ -41,8 +42,19 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      body: CustomScrollView(
-        slivers: [
+      body: Stack(
+        children: [
+          NotificationListener<ScrollNotification>(
+            onNotification: (scrollNotification) {
+              if (scrollNotification is ScrollUpdateNotification) {
+                setState(() {
+                  _scrollOffset = scrollNotification.metrics.pixels;
+                });
+              }
+              return false;
+            },
+            child: CustomScrollView(
+              slivers: [
           // Cover Photos (Telegram-style swipeable)
           SliverAppBar(
             expandedHeight: 280,
@@ -145,19 +157,7 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
                         ),
                       ),
                     ),
-                  
                 ],
-              ),
-            ),
-          ),
-          
-          // Profile Picture Overlapping
-          SliverToBoxAdapter(
-            child: Transform.translate(
-              offset: const Offset(0, -60),
-              child: Padding(
-                padding: const EdgeInsets.only(left: 20),
-                child: _buildProfilePicture(user, theme),
               ),
             ),
           ),
@@ -165,11 +165,11 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
           // Profile Content
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 10), // Space after profile pic
+                  const SizedBox(height: 10), // Space for profile pic overlap
                   
                   // Name and pronouns
                   Row(
@@ -381,6 +381,15 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
                 ],
               ),
             ),
+          ),
+              ],
+            ),
+          ),
+          // Profile Picture that scrolls with content but stays on top
+          Positioned(
+            top: 220 - _scrollOffset,
+            left: 20,
+            child: _buildProfilePicture(user, theme),
           ),
         ],
       ),
