@@ -7,6 +7,7 @@ import '../providers/custom_workout_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/body_measurement_provider.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 import 'quick_workout_generator_screen.dart';
 import 'active_ai_workout_screen.dart';
 
@@ -166,7 +167,13 @@ class _WorkoutRecommendationsScreenState extends State<WorkoutRecommendationsScr
         backgroundColor: AppColors.backgroundCard,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
         ),
         title: const Text(
           'AI RECOMMENDATIONS',

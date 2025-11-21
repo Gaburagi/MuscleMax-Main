@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/ai_workout_provider.dart';
 import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 import 'package:intl/intl.dart';
 
 class GoalPredictionScreen extends StatefulWidget {
@@ -90,7 +91,13 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
         ),
         title: const Text(
           'GOAL PREDICTIONS',

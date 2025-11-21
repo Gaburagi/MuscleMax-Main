@@ -21,7 +21,6 @@ class ProfileScreenNew extends StatefulWidget {
 class _ProfileScreenNewState extends State<ProfileScreenNew> {
   final PageController _coverPageController = PageController();
   int _currentCoverIndex = 0;
-  double _scrollOffset = 0;
 
   @override
   void dispose() {
@@ -42,21 +41,10 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      body: Stack(
-        children: [
-          NotificationListener<ScrollNotification>(
-            onNotification: (scrollNotification) {
-              if (scrollNotification is ScrollUpdateNotification) {
-                setState(() {
-                  _scrollOffset = scrollNotification.metrics.pixels;
-                });
-              }
-              return false;
-            },
-            child: CustomScrollView(
-              slivers: [
-          // Cover Photos (Telegram-style swipeable)
-          SliverAppBar(
+      body: CustomScrollView(
+        slivers: [
+              // Cover Photos (Telegram-style swipeable)
+              SliverAppBar(
             expandedHeight: 280,
             pinned: true,
             backgroundColor: AppColors.backgroundCard,
@@ -164,111 +152,122 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
           
           // Profile Content
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 80, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 10), // Space for profile pic overlap
-                  
-                  // Name and pronouns
-                  Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Profile Picture - overlaps cover photo (Facebook style)
+                Transform.translate(
+                  offset: const Offset(0, -50),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 20),
+                    child: _buildProfilePicture(user, theme),
+                  ),
+                ),
+                
+                // Name and info section
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user?.fullName ?? 'User',
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Bebas Neue',
-                                letterSpacing: 1.2,
-                              ),
-                            ),
-                            if (user?.pronouns != null) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                user!.pronouns!,
-                                style: const TextStyle(
-                                  color: AppColors.textGray,
-                                  fontSize: 14,
+                      // Name and pronouns
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  user?.fullName ?? 'User',
+                                  style: TextStyle(
+                                    color: primaryColor,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Bebas Neue',
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      // Level badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [gradientStart, gradientEnd],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.star, color: Colors.white, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              'LVL ${context.watch<GamificationProvider>().userLevel.level}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                if (user?.pronouns != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    user!.pronouns!,
+                                    style: const TextStyle(
+                                      color: AppColors.textGray,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
+                          ),
+                          // Level badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [gradientStart, gradientEnd],
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.star, color: Colors.white, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'LVL ${context.watch<GamificationProvider>().userLevel.level}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      Text(
+                        user?.email ?? '',
+                        style: const TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 14,
                         ),
                       ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 8),
-                  
-                  Text(
-                    user?.email ?? '',
-                    style: const TextStyle(
-                      color: AppColors.textGray,
-                      fontSize: 14,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  const FeaturedBadgesWidget(),
-                  
-                  // Bio
-                  if (user?.bio != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      user!.bio!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    ),
-                  ],
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Profile Status
-                  const ProfileStatusWidget(),
-                  
-                  // Story Highlights
-                  const StoryHighlightsWidget(),
-                  const SizedBox(height: 16),
-                  
-                  // Profile Badges
-                  const ProfileBadgesWidget(),
-                  const SizedBox(height: 16),
-                  
-                  // Stats Row
-                  Container(
+                      
+                      const SizedBox(height: 16),
+                      const FeaturedBadgesWidget(),
+                      
+                      // Bio
+                      if (user?.bio != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          user!.bio!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Profile Status
+                      const ProfileStatusWidget(),
+                      
+                      // Story Highlights
+                      const StoryHighlightsWidget(),
+                      const SizedBox(height: 16),
+                      
+                      // Profile Badges
+                      const ProfileBadgesWidget(),
+                      const SizedBox(height: 16),
+                      
+                      // Stats Row
+                      Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -294,105 +293,98 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
                   ),
                   
                   const SizedBox(height: 24),
-                  
-                  // Fitness Goal
-                  if (user?.fitnessGoal != null)
-                    _buildInfoCard(
-                      'FITNESS GOAL',
-                      user!.fitnessGoal!,
-                      Icons.flag,
-                      primaryColor,
-                    ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Exercise Preferences
-                  if (user?.selectedExercises.isNotEmpty ?? false)
-                    _buildInfoCard(
-                      'EXERCISE PREFERENCES',
-                      user!.selectedExercises.join(', '),
-                      Icons.fitness_center,
-                      primaryColor,
-                    ),
-                  
-                  const SizedBox(height: 24),
-                  
-                  // Profile Stats Showcase
-                  const ProfileStatsShowcase(),
-                  const SizedBox(height: 16),
-                  
-                  // Profile Visitors
-                  const ProfileVisitorsWidget(),
-                  const SizedBox(height: 16),
-                  
-                  // Workout Anthem
-                  const WorkoutAnthemWidget(),
-                  const SizedBox(height: 16),
-                  
-                  // Social Links
-                  const SocialLinksWidget(),
-                  const SizedBox(height: 32),
-                  
-                  // Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ProfileEditScreen(),
+                      
+                      // Fitness Goal
+                      if (user?.fitnessGoal != null)
+                        _buildInfoCard(
+                          'FITNESS GOAL',
+                          user!.fitnessGoal!,
+                          Icons.flag,
+                          primaryColor,
+                        ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Exercise Preferences
+                      if (user?.selectedExercises.isNotEmpty ?? false)
+                        _buildInfoCard(
+                          'EXERCISE PREFERENCES',
+                          user!.selectedExercises.join(', '),
+                          Icons.fitness_center,
+                          primaryColor,
+                        ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Profile Stats Showcase
+                      const ProfileStatsShowcase(),
+                      const SizedBox(height: 16),
+                      
+                      // Profile Visitors
+                      const ProfileVisitorsWidget(),
+                      const SizedBox(height: 16),
+                      
+                      // Workout Anthem
+                      const WorkoutAnthemWidget(),
+                      const SizedBox(height: 16),
+                      
+                      // Social Links
+                      const SocialLinksWidget(),
+                      const SizedBox(height: 32),
+                      
+                      // Action Buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ProfileEditScreen(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              icon: const Icon(Icons.edit),
+                              label: const Text('EDIT PROFILE'),
                             ),
                           ),
-                          icon: const Icon(Icons.edit),
-                          label: const Text('EDIT PROFILE'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () async {
-                            await userProvider.logout();
-                            if (context.mounted) {
-                              context.go(AppRoutes.login);
-                            }
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: primaryColor),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                await userProvider.logout();
+                                if (context.mounted) {
+                                  context.go(AppRoutes.login);
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: primaryColor),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              icon: Icon(Icons.logout, color: primaryColor),
+                              label: Text('LOGOUT', style: TextStyle(color: primaryColor)),
                             ),
                           ),
-                          icon: Icon(Icons.logout, color: primaryColor),
-                          label: Text('LOGOUT', style: TextStyle(color: primaryColor)),
-                        ),
+                        ],
                       ),
+                      
+                      const SizedBox(height: 100), // Space for bottom nav
                     ],
                   ),
-                  
-                  const SizedBox(height: 100), // Space for bottom nav
-                ],
-              ),
-            ),
-          ),
+                ),
               ],
             ),
-          ),
-          // Profile Picture that scrolls with content but stays on top
-          Positioned(
-            top: 220 - _scrollOffset,
-            left: 20,
-            child: _buildProfilePicture(user, theme),
           ),
         ],
       ),

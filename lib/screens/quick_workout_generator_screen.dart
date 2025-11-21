@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../models/ai_models.dart';
 import '../providers/ai_workout_provider.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 import 'active_ai_workout_screen.dart';
 
 class QuickWorkoutGeneratorScreen extends StatefulWidget {
@@ -39,7 +40,13 @@ class _QuickWorkoutGeneratorScreenState extends State<QuickWorkoutGeneratorScree
         backgroundColor: AppColors.backgroundCard,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
         ),
         title: const Text(
           'QUICK WORKOUT AI',

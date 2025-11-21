@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../models/ai_models.dart';
 import '../providers/ai_workout_provider.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 
 class AdaptiveDifficultyScreen extends StatelessWidget {
   const AdaptiveDifficultyScreen({super.key});
@@ -19,7 +20,13 @@ class AdaptiveDifficultyScreen extends StatelessWidget {
         backgroundColor: AppColors.backgroundCard,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
         ),
         title: const Text(
           'ADAPTIVE DIFFICULTY',
