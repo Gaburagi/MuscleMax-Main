@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/gamification_provider.dart';
 import '../models/gamification_model.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 import 'package:intl/intl.dart';
 
 class AchievementsScreen extends StatefulWidget {
@@ -47,8 +49,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         automaticallyImplyLeading: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-          onPressed: () => Navigator.of(context).pop(),
-          tooltip: 'Back to Home',
+          onPressed: () => context.go(AppRoutes.progressHub),
+          tooltip: 'Back',
         ),
         title: const Text(
           'ACHIEVEMENTS',
@@ -79,14 +81,14 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  content: Text(
+                  content: const Text(
                     'Complete workouts, maintain streaks, set PRs, and engage with the community to unlock achievements and earn XP!',
                     style: TextStyle(color: AppColors.textGray),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text(
+                      child: const Text(
                         'GOT IT',
                         style: TextStyle(color: AppColors.primaryRed),
                       ),
@@ -167,7 +169,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
-                tabs: [
+                tabs: const [
                   Tab(
                     icon: Icon(Icons.grid_view, size: 18),
                     text: 'ALL',
@@ -336,7 +338,7 @@ class _StatCard extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -393,7 +395,7 @@ class _AchievementsList extends StatelessWidget {
             Text(
               _getEmptyMessage(),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppColors.textGray,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -439,7 +441,7 @@ class _AchievementsList extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.check_circle,
                     size: 18,
                     color: Colors.green,
@@ -447,7 +449,7 @@ class _AchievementsList extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     '${unlockedAchievements.length} Unlocked',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.green,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -462,7 +464,7 @@ class _AchievementsList extends StatelessWidget {
               ),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.lock,
                     size: 18,
                     color: AppColors.textGray,
@@ -470,7 +472,7 @@ class _AchievementsList extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     '${lockedAchievements.length} Locked',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textGray,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -697,11 +699,11 @@ class _AchievementCardState extends State<_AchievementCard>
                           right: 4,
                           child: Container(
                             padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: AppColors.backgroundCard,
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.lock,
                               size: 16,
                               color: AppColors.textGray,
@@ -775,7 +777,7 @@ class _AchievementCardState extends State<_AchievementCard>
                       const SizedBox(height: 6),
                       Text(
                         widget.achievement.description,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textGray,
                           fontSize: 13,
                           height: 1.3,
@@ -789,7 +791,7 @@ class _AchievementCardState extends State<_AchievementCard>
                           children: [
                             Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.timeline,
                                   size: 14,
                                   color: AppColors.textGray,
@@ -797,7 +799,7 @@ class _AchievementCardState extends State<_AchievementCard>
                                 const SizedBox(width: 4),
                                 Text(
                                   '${widget.achievement.currentProgress}/${widget.achievement.requiredCount}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: AppColors.textGray,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,7 +7,9 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
 import '../providers/user_provider.dart';
+import '../providers/profile_stats_provider.dart';
 import '../models/user_model.dart';
+import '../models/profile_extensions.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   const ProfileEditScreen({super.key});
@@ -27,6 +30,8 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
   
   final ImagePicker _imagePicker = ImagePicker();
   bool _isSaving = false;
+  List<String> _purchasedItems = [];
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -40,10 +45,37 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
     _coverPhotoPaths = List.from(user?.coverPhotos ?? []);
     _selectedTheme = user?.profileTheme ?? ProfileTheme.defaultTheme;
     _selectedFrame = user?.profileFrame;
+    
+    // Add listeners for text field changes to auto-save
+    _bioController.addListener(_onTextFieldChanged);
+    _pronounsController.addListener(_onTextFieldChanged);
+    
+    _loadPurchasedItems();
+  }
+  
+  void _onTextFieldChanged() {
+    // Cancel previous timer
+    _debounceTimer?.cancel();
+    
+    // Create new timer - save after 1 second of no typing
+    _debounceTimer = Timer(const Duration(seconds: 1), () {
+      if (mounted) {
+        _saveProfile();
+      }
+    });
+  }
+  
+  Future<void> _loadPurchasedItems() async {
+    final statsProvider = context.read<ProfileStatsProvider>();
+    final purchased = await statsProvider.getPurchasedItems();
+    setState(() {
+      _purchasedItems = purchased;
+    });
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _tabController.dispose();
     _bioController.dispose();
     _pronounsController.dispose();
@@ -56,29 +88,35 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
     );
     
     if (image != null && mounted) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: image.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Profile Photo',
-            toolbarColor: AppColors.backgroundCard,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Crop Profile Photo',
-            aspectRatioLockEnabled: true,
-          ),
-        ],
-      );
-      
-      if (croppedFile != null) {
-        setState(() {
-          _profilePhotoPath = croppedFile.path;
-        });
+      // Try to crop, but if cropping fails (e.g., on Windows), use original
+      CroppedFile? croppedFile;
+      try {
+        croppedFile = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Profile Photo',
+              toolbarColor: AppColors.backgroundCard,
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+            ),
+            IOSUiSettings(
+              title: 'Crop Profile Photo',
+              aspectRatioLockEnabled: true,
+            ),
+          ],
+        );
+      } catch (e) {
+        // Cropping not supported on this platform, use original image
+        debugPrint('Image cropping not available: $e');
       }
+      
+      setState(() {
+        _profilePhotoPath = croppedFile?.path ?? image.path;
+      });
+      _saveProfile();
     }
   }
 
@@ -97,29 +135,35 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
     );
     
     if (image != null && mounted) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: image.path,
-        aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Cover Photo',
-            toolbarColor: AppColors.backgroundCard,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.ratio16x9,
-            lockAspectRatio: false,
-          ),
-          IOSUiSettings(
-            title: 'Crop Cover Photo',
-            aspectRatioLockEnabled: false,
-          ),
-        ],
-      );
-      
-      if (croppedFile != null) {
-        setState(() {
-          _coverPhotoPaths = List.from(_coverPhotoPaths)..add(croppedFile.path);
-        });
+      // Try to crop, but if cropping fails (e.g., on Windows), use original
+      CroppedFile? croppedFile;
+      try {
+        croppedFile = await ImageCropper().cropImage(
+          sourcePath: image.path,
+          aspectRatio: const CropAspectRatio(ratioX: 16, ratioY: 9),
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Crop Cover Photo',
+              toolbarColor: AppColors.backgroundCard,
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.ratio16x9,
+              lockAspectRatio: false,
+            ),
+            IOSUiSettings(
+              title: 'Crop Cover Photo',
+              aspectRatioLockEnabled: false,
+            ),
+          ],
+        );
+      } catch (e) {
+        // Cropping not supported on this platform, use original image
+        debugPrint('Image cropping not available: $e');
       }
+      
+      setState(() {
+        _coverPhotoPaths = List.from(_coverPhotoPaths)..add(croppedFile?.path ?? image.path);
+      });
+      _saveProfile();
     }
   }
 
@@ -127,9 +171,12 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
     setState(() {
       _coverPhotoPaths.removeAt(index);
     });
+    _saveProfile();
   }
 
-  Future<void> _saveProfile() async {
+  Future<void> _saveProfile({bool showFeedback = false}) async {
+    if (_isSaving) return; // Prevent multiple simultaneous saves
+    
     setState(() => _isSaving = true);
 
     try {
@@ -143,11 +190,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
         profileFrame: _selectedFrame,
       );
 
-      if (mounted) {
+      if (mounted && showFeedback) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile updated successfully!')),
         );
-        context.pop();
       }
     } catch (e) {
       if (mounted) {
@@ -200,7 +246,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
                     ),
                   )
                 : const Icon(Icons.check, color: AppColors.primaryRed),
-            onPressed: _isSaving ? null : _saveProfile,
+            onPressed: _isSaving ? null : () async {
+              await _saveProfile(showFeedback: true);
+              if (mounted) context.pop();
+            },
           ),
         ],
       ),
@@ -412,13 +461,16 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
   }
 
   Widget _buildThemeTab() {
-    final themes = [
+    // Get purchased theme items from shop
+    final purchasedThemeIds = _purchasedItems.where((id) => id.startsWith('theme_')).toList();
+    final allShopThemes = ShopItem.catalog.where((item) => item.type == 'theme').toList();
+    
+    // Filter to only show purchased themes + default
+    final availableThemes = [
       ProfileTheme.defaultTheme,
-      ProfileTheme.fireTheme,
-      ProfileTheme.iceTheme,
-      ProfileTheme.purpleTheme,
-      ProfileTheme.goldTheme,
-      ProfileTheme.neonTheme,
+      ...allShopThemes
+          .where((shopItem) => purchasedThemeIds.contains(shopItem.id))
+          .map((shopItem) => _getThemeFromShopItem(shopItem))
     ];
 
     return ListView(
@@ -432,10 +484,74 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(height: 8),
+        Text(
+          'Purchased: ${purchasedThemeIds.length}',
+          style: const TextStyle(
+            color: AppColors.textGray,
+            fontSize: 14,
+          ),
+        ),
         const SizedBox(height: 16),
-        ...themes.map((theme) => _buildThemeCard(theme)),
+        if (availableThemes.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(40),
+              child: Column(
+                children: [
+                  Icon(Icons.lock, size: 64, color: Colors.grey.withOpacity(0.5)),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No themes purchased yet',
+                    style: TextStyle(color: AppColors.textGray, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Visit the shop to buy themes!',
+                    style: TextStyle(color: AppColors.textGray, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...availableThemes.map((theme) => _buildThemeCard(theme)),
       ],
     );
+  }
+  
+  ProfileTheme _getThemeFromShopItem(ShopItem item) {
+    switch (item.id) {
+      case 'theme_sunset':
+        return ProfileTheme(
+          themeName: 'Sunset Blaze',
+          primaryColor: '#FF6B35',
+          accentColor: '#F7931E',
+          backgroundColor: '#1C1C1E',
+          gradientStart: '#FF6B35',
+          gradientEnd: '#F7931E',
+        );
+      case 'theme_ocean':
+        return ProfileTheme(
+          themeName: 'Ocean Blue',
+          primaryColor: '#2196F3',
+          accentColor: '#00BCD4',
+          backgroundColor: '#1C1C1E',
+          gradientStart: '#2196F3',
+          gradientEnd: '#00BCD4',
+        );
+      case 'theme_forest':
+        return ProfileTheme(
+          themeName: 'Forest Green',
+          primaryColor: '#4CAF50',
+          accentColor: '#8BC34A',
+          backgroundColor: '#1C1C1E',
+          gradientStart: '#4CAF50',
+          gradientEnd: '#8BC34A',
+        );
+      default:
+        return ProfileTheme.defaultTheme;
+    }
   }
 
   Widget _buildThemeCard(ProfileTheme theme) {
@@ -445,7 +561,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
     final gradientEnd = Color(int.parse('0xFF${theme.gradientEnd.substring(1)}'));
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedTheme = theme),
+      onTap: () {
+        setState(() => _selectedTheme = theme);
+        _saveProfile();
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
@@ -519,14 +638,44 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
   }
 
   Widget _buildFramesTab() {
-    final frames = [
-      {'id': null, 'name': 'None', 'icon': Icons.radio_button_unchecked},
-      {'id': 'gold', 'name': 'Gold', 'icon': Icons.stars, 'color': Colors.amber},
-      {'id': 'diamond', 'name': 'Diamond', 'icon': Icons.diamond, 'color': Colors.cyan},
-      {'id': 'fire', 'name': 'Fire', 'icon': Icons.local_fire_department, 'color': Colors.orange},
-      {'id': 'champion', 'name': 'Champion', 'icon': Icons.emoji_events, 'color': Colors.yellow},
-      {'id': 'beast', 'name': 'Beast', 'icon': Icons.fitness_center, 'color': AppColors.primaryRed},
+    // Filter for purchased frames only
+    final purchasedFrameItems = ShopItem.catalog
+        .where((item) => 
+            item.type == 'frame' && 
+            (_purchasedItems.contains(item.id)))
+        .toList();
+
+    // Convert to frame data format
+    final List<Map<String, dynamic>> frames = [
+      {'id': null, 'name': 'None', 'icon': Icons.radio_button_unchecked}, // Default always available
     ];
+    
+    // Add purchased frames
+    for (final item in purchasedFrameItems) {
+      frames.add(_getFrameFromShopItem(item));
+    }
+
+    if (frames.length == 1) {
+      // Only default available, show empty state
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.lock_outline, size: 64, color: Colors.white24),
+            const SizedBox(height: 16),
+            const Text(
+              'Visit the shop to buy frames!',
+              style: TextStyle(color: Colors.white54, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Purchased: ${purchasedFrameItems.length}',
+              style: const TextStyle(color: Colors.white38, fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
 
     return GridView.builder(
       padding: const EdgeInsets.all(20),
@@ -542,7 +691,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
         final isSelected = _selectedFrame == frame['id'];
         
         return GestureDetector(
-          onTap: () => setState(() => _selectedFrame = frame['id'] as String?),
+          onTap: () {
+            setState(() => _selectedFrame = frame['id'] as String?);
+            _saveProfile();
+          },
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.backgroundCard,
@@ -580,5 +732,19 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> with SingleTicker
         );
       },
     );
+  }
+
+  Map<String, dynamic> _getFrameFromShopItem(ShopItem item) {
+    // Map shop item IDs to frame display data
+    switch (item.id) {
+      case 'frame_gold':
+        return {'id': 'gold', 'name': 'Gold', 'icon': Icons.stars, 'color': Colors.amber};
+      case 'frame_platinum':
+        return {'id': 'platinum', 'name': 'Platinum', 'icon': Icons.diamond, 'color': Colors.cyan};
+      case 'frame_diamond':
+        return {'id': 'diamond', 'name': 'Diamond', 'icon': Icons.diamond_outlined, 'color': Colors.blue};
+      default:
+        return {'id': item.id.replaceFirst('frame_', ''), 'name': item.name, 'icon': Icons.crop_square, 'color': Colors.grey};
+    }
   }
 }

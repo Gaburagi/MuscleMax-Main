@@ -4,6 +4,7 @@ import 'dart:async';
 import '../models/ai_models.dart';
 import '../providers/ai_workout_provider.dart';
 import '../providers/gamification_provider.dart';
+import '../providers/profile_stats_provider.dart';
 import '../providers/social_provider.dart';
 // import '../providers/workout_history_provider.dart'; // Will be created later
 import '../utils/app_colors.dart';
@@ -466,6 +467,15 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
     // Award gamification rewards
     final gamificationProvider = context.read<GamificationProvider>();
     final result = await gamificationProvider.onWorkoutCompleted();
+    
+    // Update profile stats
+    final profileStatsProvider = context.read<ProfileStatsProvider>();
+    await profileStatsProvider.updateWorkoutStats(
+      workoutsIncrement: 1,
+      weightLifted: 0,
+      caloriesBurned: widget.workout.estimatedCalories,
+      exerciseName: widget.workout.name,
+    );
     
     // Track muscle recovery for AI
     final aiProvider = context.read<AIWorkoutProvider>();

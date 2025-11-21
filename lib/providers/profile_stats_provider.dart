@@ -150,31 +150,52 @@ class ProfileStatsProvider with ChangeNotifier {
 
   // Status updates
   Future<void> updateStatus({
-    required String mood,
-    required String statusText,
+    ProfileMood? mood,
+    String? customText,
   }) async {
-    if (_user == null) return;
-
-    _user = _user!.copyWith(
-      currentMood: mood,
-      statusText: statusText,
-      statusTimestamp: DateTime.now(),
-    );
-
-    await _saveUser();
+    final prefs = await SharedPreferences.getInstance();
+    
+    if (mood != null) {
+      await prefs.setString('current_mood', mood.name);
+    } else {
+      await prefs.remove('current_mood');
+    }
+    
+    if (customText != null && customText.isNotEmpty) {
+      await prefs.setString('status_text', customText);
+    } else {
+      await prefs.remove('status_text');
+    }
+    
+    await prefs.setString('status_timestamp', DateTime.now().toIso8601String());
     notifyListeners();
   }
 
+  Future<Map<String, dynamic>> getCurrentStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final moodName = prefs.getString('current_mood');
+    final statusText = prefs.getString('status_text');
+    
+    ProfileMood? mood;
+    if (moodName != null) {
+      try {
+        mood = ProfileMood.values.firstWhere((m) => m.name == moodName);
+      } catch (e) {
+        mood = null;
+      }
+    }
+    
+    return {
+      'mood': mood,
+      'customText': statusText,
+    };
+  }
+
   Future<void> clearStatus() async {
-    if (_user == null) return;
-
-    _user = _user!.copyWith(
-      currentMood: null,
-      statusText: null,
-      statusTimestamp: null,
-    );
-
-    await _saveUser();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('current_mood');
+    await prefs.remove('status_text');
+    await prefs.remove('status_timestamp');
     notifyListeners();
   }
 
@@ -185,27 +206,60 @@ class ProfileStatsProvider with ChangeNotifier {
   }
 
   // Social links
+  Future<List<SocialLink>> getSocialLinks() async {
+    final prefs = await SharedPreferences.getInstance();
+    final linksJson = prefs.getString('social_links');
+    if (linksJson == null) return [];
+    
+    final List<dynamic> linksList = jsonDecode(linksJson);
+    return linksList.map((json) => SocialLink.fromJson(json)).toList();
+  }
+
   Future<void> addSocialLink(SocialLink link) async {
-    if (_user == null) return;
-
-    final List<SocialLink> updatedLinks = [..._user!.socialLinks];
-
-    if (updatedLinks.length < 5) {
-      updatedLinks.add(link);
-      _user = _user!.copyWith(socialLinks: updatedLinks);
-      await _saveUser();
-      notifyListeners();
-    }
+    final links = await getSocialLinks();
+    if (links.length >= 5) return;
+    
+    links.add(link);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('social_links', jsonEncode(links.map((l) => l.toJson()).toList()));
+    notifyListeners();
   }
 
   Future<void> removeSocialLink(int index) async {
-    if (_user == null) return;
-
-    final List<SocialLink> updatedLinks = [..._user!.socialLinks];
-    updatedLinks.removeAt(index);
-
-    _user = _user!.copyWith(socialLinks: updatedLinks);
-    await _saveUser();
+    final links = await getSocialLinks();
+    if (index >= 0 && index < links.length) {
+      links.removeAt(index);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('social_links', jsonEncode(links.map((l) => l.toJson()).toList()));
+      notifyListeners();
+    }
+  }
+  
+  // Profile visitors tracking
+  List<ProfileVisitor> get profileVisitors {
+    // Return empty list for now, implement full tracking later
+    return [];
+  }
+  
+  Future<void> addProfileVisitor(ProfileVisitor visitor) async {
+    final prefs = await SharedPreferences.getInstance();
+    final visitorsJson = prefs.getString('profile_visitors');
+    
+    List<ProfileVisitor> visitors = [];
+    if (visitorsJson != null) {
+      final List<dynamic> visitorsList = jsonDecode(visitorsJson);
+      visitors = visitorsList.map((json) => ProfileVisitor.fromJson(json)).toList();
+    }
+    
+    // Add new visitor at the beginning
+    visitors.insert(0, visitor);
+    
+    // Keep only last 20 visitors
+    if (visitors.length > 20) {
+      visitors = visitors.sublist(0, 20);
+    }
+    
+    await prefs.setString('profile_visitors', jsonEncode(visitors.map((v) => v.toJson()).toList()));
     notifyListeners();
   }
 

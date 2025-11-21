@@ -533,6 +533,170 @@ class AIWorkoutProvider extends ChangeNotifier {
       ));
     }
     
+    // Recommendation 6: HIIT Cardio Blast
+    if (userGoal == 'weight_loss' || userGoal == 'endurance') {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_hiit',
+        workoutName: 'HIIT Cardio Blast',
+        estimatedDuration: 25,
+        intensity: WorkoutIntensity.extreme,
+        muscleGroups: ['Full Body', 'Cardio'],
+        estimatedCalories: 400,
+        confidenceScore: 0.84,
+        reasoning: 'High-intensity intervals for maximum calorie burn and cardiovascular improvement.',
+        benefits: ['Extreme calorie burn', 'Boost metabolism for 24hrs', 'Improve VO2 max', 'Time efficient'],
+        exerciseCount: 6,
+      ));
+    }
+    
+    // Recommendation 7: Powerlifting Focus
+    if (userGoal == 'strength' && readiness.overallScore >= 75 && fitnessLevel >= 6) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_powerlifting',
+        workoutName: 'Powerlifting: The Big 3',
+        estimatedDuration: 90,
+        intensity: WorkoutIntensity.hard,
+        muscleGroups: ['Chest', 'Back', 'Legs'],
+        estimatedCalories: 450,
+        confidenceScore: 0.83,
+        reasoning: 'Advanced compound movements: Squat, Bench, Deadlift. Build raw power and strength.',
+        benefits: ['Maximum strength gains', 'Functional power', 'Core stability', 'Mental toughness'],
+        exerciseCount: 3,
+      ));
+    }
+    
+    // Recommendation 8: Olympic Lifting
+    if (userGoal == 'strength' && fitnessLevel >= 7) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_olympic',
+        workoutName: 'Olympic Lifting: Power & Explosiveness',
+        estimatedDuration: 60,
+        intensity: WorkoutIntensity.hard,
+        muscleGroups: ['Full Body'],
+        estimatedCalories: 380,
+        confidenceScore: 0.80,
+        reasoning: 'Clean & Jerk, Snatch variations. Develop explosive power and full-body coordination.',
+        benefits: ['Explosive power', 'Full-body coordination', 'Athletic performance', 'Functional strength'],
+        exerciseCount: 5,
+      ));
+    }
+    
+    // Recommendation 9: Calisthenics & Bodyweight
+    if (recoveredMuscles.length >= 3) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_calisthenics',
+        workoutName: 'Calisthenics Mastery',
+        estimatedDuration: 45,
+        intensity: WorkoutIntensity.moderate,
+        muscleGroups: ['Full Body', 'Core'],
+        estimatedCalories: 280,
+        confidenceScore: 0.81,
+        reasoning: 'No equipment needed. Master your bodyweight with progressive movements.',
+        benefits: ['Build functional strength', 'Improve body control', 'Train anywhere', 'Core integration'],
+        exerciseCount: 7,
+      ));
+    }
+    
+    // Recommendation 10: Flexibility & Mobility
+    if (consecutiveDays >= 3 || readiness.overallScore < 55) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_flexibility',
+        workoutName: 'Flexibility & Mobility Flow',
+        estimatedDuration: 30,
+        intensity: WorkoutIntensity.light,
+        muscleGroups: ['Full Body'],
+        estimatedCalories: 100,
+        confidenceScore: 0.88,
+        reasoning: 'Dynamic stretching and mobility work. Perfect for recovery days or consecutive training.',
+        benefits: ['Improve range of motion', 'Reduce injury risk', 'Active recovery', 'Better movement quality'],
+        exerciseCount: 10,
+      ));
+    }
+    
+    // Recommendation 11: Circuit Training
+    if (availableTime >= 40 && availableTime <= 50) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_circuit',
+        workoutName: 'Circuit Training: Total Body Burn',
+        estimatedDuration: 45,
+        intensity: WorkoutIntensity.hard,
+        muscleGroups: ['Full Body', 'Cardio'],
+        estimatedCalories: 420,
+        confidenceScore: 0.83,
+        reasoning: 'High-intensity circuit with minimal rest. Combines strength and cardio for maximum efficiency.',
+        benefits: ['Build strength & endurance', 'Maximum calorie burn', 'Time efficient', 'Boost metabolism'],
+        exerciseCount: 8,
+      ));
+    }
+    
+    // Recommendation 12: Upper/Lower Split
+    if (fitnessLevel >= 5 && readiness.overallScore >= 65) {
+      final isUpperDay = recentMuscleGroups.any((m) => ['Legs'].contains(m));
+      final targetMuscles = isUpperDay 
+          ? ['Chest', 'Back', 'Shoulders', 'Arms']
+          : ['Legs', 'Core'];
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: isUpperDay ? 'rec_upper' : 'rec_lower',
+        workoutName: isUpperDay ? 'Upper Body Power' : 'Lower Body Strength',
+        estimatedDuration: 60,
+        intensity: WorkoutIntensity.hard,
+        muscleGroups: targetMuscles,
+        estimatedCalories: 350,
+        confidenceScore: 0.85,
+        reasoning: 'Based on your recent training, focus on ${isUpperDay ? "upper body" : "lower body"} today for balanced development.',
+        benefits: ['Muscle group focus', 'Prevent overtraining', 'Balanced development', 'Higher volume per muscle'],
+        exerciseCount: 7,
+      ));
+    }
+    
+    // Recommendation 13: Core Intensive
+    if (!recentMuscleGroups.contains('Core') && recoveredMuscles.contains('Core')) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_core_intensive',
+        workoutName: 'Core Intensive: 360° Development',
+        estimatedDuration: 35,
+        intensity: WorkoutIntensity.moderate,
+        muscleGroups: ['Core'],
+        estimatedCalories: 200,
+        confidenceScore: 0.79,
+        reasoning: 'Your core hasn\'t been targeted recently. Strong core = better performance in all lifts.',
+        benefits: ['Build core strength', 'Improve posture', 'Prevent back pain', 'Better lifts'],
+        exerciseCount: 8,
+      ));
+    }
+    
+    // Recommendation 14: Athletic Performance
+    if (userGoal == 'general_fitness' && readiness.overallScore >= 70) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_athletic',
+        workoutName: 'Athletic Performance Training',
+        estimatedDuration: 55,
+        intensity: WorkoutIntensity.hard,
+        muscleGroups: ['Full Body'],
+        estimatedCalories: 400,
+        confidenceScore: 0.82,
+        reasoning: 'Plyometrics, agility drills, and explosive movements for overall athleticism.',
+        benefits: ['Improve explosiveness', 'Better agility', 'Sports performance', 'Functional fitness'],
+        exerciseCount: 9,
+      ));
+    }
+    
+    // Recommendation 15: Rehabilitation & Prehab
+    if (readiness.overallScore < 50 || fatiguedMuscles.length >= 4) {
+      _recommendations.add(WorkoutRecommendation(
+        workoutId: 'rec_rehab',
+        workoutName: 'Rehabilitation & Injury Prevention',
+        estimatedDuration: 40,
+        intensity: WorkoutIntensity.light,
+        muscleGroups: ['Full Body'],
+        estimatedCalories: 150,
+        confidenceScore: 0.90,
+        reasoning: 'Focus on injury prevention with corrective exercises and targeted mobility work.',
+        benefits: ['Prevent injuries', 'Address imbalances', 'Improve joint health', 'Safe recovery'],
+        exerciseCount: 10,
+      ));
+    }
+    
     // Sort by confidence score
     _recommendations.sort((a, b) => b.confidenceScore.compareTo(a.confidenceScore));
     

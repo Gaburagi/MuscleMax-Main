@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/custom_workout_provider.dart';
 import '../providers/workout_provider.dart';
 import '../providers/gamification_provider.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 import '../models/workout_model.dart';
 import '../models/gamification_model.dart';
 import 'workout_share_screen.dart';
@@ -56,7 +58,7 @@ class _WorkoutHistoryScreenState extends State<WorkoutHistoryScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () => context.go(AppRoutes.trainingHub),
                     ),
                     const SizedBox(width: 8),
                     const Text(

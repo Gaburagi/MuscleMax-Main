@@ -57,6 +57,19 @@ class _CustomizationShopScreenState extends State<CustomizationShopScreen> with 
           ),
         ),
         actions: [
+          // Test button to add XP
+          IconButton(
+            icon: const Icon(Icons.add_circle, color: Colors.green),
+            tooltip: 'Add 1000 XP (Test)',
+            onPressed: () async {
+              await gamificationProvider.awardXP(1000, 'Test XP', description: 'Testing shop functionality');
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Added 1000 XP for testing!')),
+                );
+              }
+            },
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
@@ -195,25 +208,31 @@ class _CustomizationShopScreenState extends State<CustomizationShopScreen> with 
                             ),
                           ],
                         ),
-                        isPurchased
-                            ? OutlinedButton(
-                                onPressed: () => _applyItem(theme),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.green),
+                        SizedBox(
+                          width: 90,
+                          height: 36,
+                          child: isPurchased
+                              ? OutlinedButton(
+                                  onPressed: () => _applyItem(theme),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.green),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  ),
+                                  child: const Text(
+                                    'APPLY',
+                                    style: TextStyle(color: Colors.green, fontSize: 11),
+                                  ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: !canAfford ? null : () => _purchaseItem(theme),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryRed,
+                                    disabledBackgroundColor: Colors.grey,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  ),
+                                  child: Text(!canAfford ? 'LOCKED' : 'BUY', style: const TextStyle(fontSize: 11)),
                                 ),
-                                child: const Text(
-                                  'APPLY',
-                                  style: TextStyle(color: Colors.green),
-                                ),
-                              )
-                            : ElevatedButton(
-                                onPressed: !canAfford ? null : () => _purchaseItem(theme),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryRed,
-                                  disabledBackgroundColor: Colors.grey,
-                                ),
-                                child: Text(!canAfford ? 'LOCKED' : 'BUY'),
-                              ),
+                        ),
                       ],
                     ),
                   ],
@@ -336,17 +355,18 @@ class _CustomizationShopScreenState extends State<CustomizationShopScreen> with 
                     ),
                   ],
                 ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 36,
                   child: isPurchased
                       ? OutlinedButton(
                           onPressed: () => _applyItem(frame),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Colors.green),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 6),
                           ),
                           child: const Text(
                             'APPLY',
@@ -360,7 +380,7 @@ class _CustomizationShopScreenState extends State<CustomizationShopScreen> with 
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryRed,
                             disabledBackgroundColor: Colors.grey,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            padding: const EdgeInsets.symmetric(vertical: 6),
                           ),
                           child: Text(
                             !hasAchievement
@@ -393,24 +413,39 @@ class _CustomizationShopScreenState extends State<CustomizationShopScreen> with 
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.backgroundCard,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: AppColors.primaryRed.withOpacity(0.3),
+              width: 1,
+            ),
           ),
-          child: Row(
+          child: Column(
             children: [
+              // Pattern preview
               Container(
-                width: 60,
-                height: 60,
+                height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primaryRed.withOpacity(0.3),
+                      AppColors.primaryRed.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
                 ),
-                child: const Icon(Icons.texture, color: Colors.white, size: 32),
+                child: Center(
+                  child: Icon(Icons.texture, color: Colors.white, size: 48),
+                ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
+              
+              // Info
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -418,60 +453,67 @@ class _CustomizationShopScreenState extends State<CustomizationShopScreen> with 
                       pattern.name,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
+                        fontFamily: 'Bebas Neue',
+                        letterSpacing: 1.2,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       pattern.description,
                       style: const TextStyle(
                         color: AppColors.textGray,
-                        fontSize: 13,
+                        fontSize: 14,
                       ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 20),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${pattern.xpCost} XP',
+                              style: const TextStyle(
+                                color: Colors.amber,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(
+                          width: 90,
+                          height: 36,
+                          child: isPurchased
+                              ? OutlinedButton(
+                                  onPressed: () => _applyItem(pattern),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.green),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  ),
+                                  child: const Text(
+                                    'APPLY',
+                                    style: TextStyle(color: Colors.green, fontSize: 11),
+                                  ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: !canAfford ? null : () => _purchaseItem(pattern),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryRed,
+                                    disabledBackgroundColor: Colors.grey,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  ),
+                                  child: Text(!canAfford ? 'LOCKED' : 'BUY', style: const TextStyle(fontSize: 11)),
+                                ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${pattern.xpCost}',
-                        style: const TextStyle(
-                          color: Colors.amber,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  isPurchased
-                      ? OutlinedButton(
-                          onPressed: () => _applyItem(pattern),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.green),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          ),
-                          child: const Text(
-                            'APPLY',
-                            style: TextStyle(color: Colors.green),
-                          ),
-                        )
-                      : ElevatedButton(
-                          onPressed: !canAfford ? null : () => _purchaseItem(pattern),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryRed,
-                            disabledBackgroundColor: Colors.grey,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          ),
-                          child: const Text('BUY'),
-                        ),
-                ],
               ),
             ],
           ),
@@ -493,94 +535,136 @@ class _CustomizationShopScreenState extends State<CustomizationShopScreen> with 
 
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppColors.backgroundCard,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.cyan.withOpacity(0.5)),
+            border: Border.all(
+              color: Colors.cyan.withOpacity(0.5),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.cyan.withOpacity(0.2),
+                blurRadius: 12,
+                spreadRadius: 2,
+              ),
+            ],
           ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Colors.cyan, Colors.blue],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.auto_awesome, color: Colors.white, size: 28),
+              // Feature header with icon
+              Container(
+                height: 140,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.cyan, Colors.blue],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          feature.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          feature.description,
-                          style: const TextStyle(
-                            color: AppColors.textGray,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${feature.xpCost} XP',
-                        style: const TextStyle(
-                          color: Colors.amber,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      const Icon(Icons.auto_awesome, color: Colors.white, size: 48),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'SPECIAL FEATURE',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.5,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  isPurchased
-                      ? OutlinedButton.icon(
-                          onPressed: () => _applyItem(feature),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.green),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          ),
-                          icon: const Icon(Icons.check_circle, color: Colors.green),
-                          label: const Text(
-                            'APPLY',
-                            style: TextStyle(color: Colors.green),
-                          ),
-                        )
-                      : ElevatedButton.icon(
-                          onPressed: !canAfford ? null : () => _purchaseItem(feature),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryRed,
-                            disabledBackgroundColor: Colors.grey,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          ),
-                          icon: const Icon(Icons.shopping_cart),
-                          label: Text(!canAfford ? 'LOCKED' : 'UNLOCK'),
+                ),
+              ),
+              
+              // Info section
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      feature.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Bebas Neue',
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      feature.description,
+                      style: const TextStyle(
+                        color: AppColors.textGray,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.star, color: Colors.amber, size: 22),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${feature.xpCost} XP',
+                              style: const TextStyle(
+                                color: Colors.amber,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
-                ],
+                        SizedBox(
+                          width: 100,
+                          height: 36,
+                          child: isPurchased
+                              ? OutlinedButton(
+                                  onPressed: () => _applyItem(feature),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.green),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  ),
+                                  child: const Text(
+                                    'APPLY',
+                                    style: TextStyle(color: Colors.green, fontSize: 11),
+                                  ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: !canAfford ? null : () => _purchaseItem(feature),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryRed,
+                                    disabledBackgroundColor: Colors.grey,
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  ),
+                                  child: Text(!canAfford ? 'LOCKED' : 'BUY', style: const TextStyle(fontSize: 11)),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

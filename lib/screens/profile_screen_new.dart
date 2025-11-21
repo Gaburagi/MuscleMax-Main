@@ -238,6 +238,9 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
                     ),
                   ),
                   
+                  const SizedBox(height: 16),
+                  const FeaturedBadgesWidget(),
+                  
                   // Bio
                   if (user?.bio != null) ...[
                     const SizedBox(height: 16),

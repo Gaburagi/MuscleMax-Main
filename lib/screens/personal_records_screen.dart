@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 import '../providers/body_measurement_provider.dart';
 import '../models/body_measurement.dart';
 
@@ -33,6 +35,10 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen> with Sing
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.go(AppRoutes.progressHub),
+        ),
         title: const Text('Personal Records'),
         backgroundColor: AppColors.backgroundDark,
         bottom: TabBar(

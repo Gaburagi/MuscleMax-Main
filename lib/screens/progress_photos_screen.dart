@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../models/body_measurement.dart';
+import '../utils/routes.dart';
 import '../providers/body_measurement_provider.dart';
 import '../utils/app_colors.dart';
 import 'package:intl/intl.dart';
@@ -203,6 +205,10 @@ class _ProgressPhotosScreenState extends State<ProgressPhotosScreen> with Single
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.go(AppRoutes.progressHub),
+        ),
         backgroundColor: AppColors.backgroundCard,
         title: const Text('Progress Photos'),
         bottom: TabBar(

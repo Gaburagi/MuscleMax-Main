@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 import '../providers/body_measurement_provider.dart';
 import '../models/body_measurement.dart';
 
@@ -33,6 +35,10 @@ class _BodyMeasurementsScreenState extends State<BodyMeasurementsScreen> with Si
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.go(AppRoutes.progressHub),
+        ),
         title: const Text('Body Measurements'),
         backgroundColor: AppColors.backgroundCard,
         bottom: TabBar(
@@ -992,7 +998,7 @@ class _AddMeasurementDialogState extends State<_AddMeasurementDialog> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: ColorScheme.dark(
+            colorScheme: const ColorScheme.dark(
               primary: AppColors.primaryRed,
               surface: AppColors.backgroundCard,
             ),
@@ -1084,7 +1090,7 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedType,
+              initialValue: _selectedType,
               dropdownColor: AppColors.backgroundCard,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
@@ -1172,7 +1178,7 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.dark().copyWith(
-            colorScheme: ColorScheme.dark(
+            colorScheme: const ColorScheme.dark(
               primary: AppColors.primaryRed,
               surface: AppColors.backgroundCard,
             ),

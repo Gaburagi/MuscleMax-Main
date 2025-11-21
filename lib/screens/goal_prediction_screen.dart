@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/ai_workout_provider.dart';
 import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
@@ -87,7 +88,10 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
         elevation: 0,
-        automaticallyImplyLeading: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
         title: const Text(
           'GOAL PREDICTIONS',
           style: TextStyle(
@@ -129,20 +133,9 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
             const SizedBox(height: 12),
             _buildRecommendationsCard(prediction),
             
-            const SizedBox(height: 100), // Space for bottom button
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pop(context),
-        backgroundColor: AppColors.primaryRed,
-        icon: const Icon(Icons.home),
-        label: const Text(
-          'BACK TO HOME',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -260,7 +253,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Goal Prediction',
                     style: TextStyle(
                       color: AppColors.textGray,
@@ -301,7 +294,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Text(
+                    const Text(
                       'Confidence',
                       style: TextStyle(
                         color: AppColors.textGray,
@@ -324,7 +317,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
                   Colors.blue,
                 ),
               ),
-              Icon(Icons.arrow_forward, color: AppColors.textGray),
+              const Icon(Icons.arrow_forward, color: AppColors.textGray),
               Expanded(
                 child: _buildStatColumn(
                   'Target',
@@ -344,7 +337,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Estimated Completion',
                     style: TextStyle(
                       color: AppColors.textGray,
@@ -365,7 +358,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
+                  const Text(
                     'Days to Goal',
                     style: TextStyle(
                       color: AppColors.textGray,
@@ -395,7 +388,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 12,
           ),
@@ -423,7 +416,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
           color: AppColors.backgroundCard,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Center(
+        child: const Center(
           child: Text(
             'Not enough data for visualization',
             style: TextStyle(color: AppColors.textGray),
@@ -467,7 +460,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
@@ -519,7 +512,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 10,
           ),
@@ -575,7 +568,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
         ),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 11,
           ),
@@ -603,7 +596,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   Icons.lightbulb,
                   color: AppColors.primaryRed,
                   size: 20,
@@ -612,7 +605,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
                 Expanded(
                   child: Text(
                     rec,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textWhite,
                       fontSize: 14,
                       height: 1.4,
@@ -698,8 +691,8 @@ class _ProgressChartPainter extends CustomPainter {
         final y2 = size.height - ((projectedData[i + 1].value - minValue) / (maxValue - minValue)) * size.height;
         
         // Draw dashed line
-        final dashWidth = 8.0;
-        final dashSpace = 4.0;
+        const dashWidth = 8.0;
+        const dashSpace = 4.0;
         double distance = 0;
         final totalDistance = (Offset(x2, y2) - Offset(x1, y1)).distance;
         

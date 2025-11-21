@@ -18,7 +18,7 @@ class WorkoutLibraryScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.go(AppRoutes.home),
+          onPressed: () => context.go(AppRoutes.trainingHub),
         ),
         title: const Text(
           'MY WORKOUTS',

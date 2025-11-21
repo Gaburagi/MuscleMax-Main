@@ -385,23 +385,26 @@ class _QuickActionCard extends StatelessWidget {
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: AppColors.textWhite, size: 32),
+              child: Icon(icon, color: AppColors.textWhite, size: 28),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             Text(
               title,
               textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: AppColors.textWhite,
-                fontSize: 14,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
             ),

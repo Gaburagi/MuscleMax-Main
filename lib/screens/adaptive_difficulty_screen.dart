@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../models/ai_models.dart';
 import '../providers/ai_workout_provider.dart';
 import '../utils/app_colors.dart';
@@ -16,6 +17,10 @@ class AdaptiveDifficultyScreen extends StatelessWidget {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundCard,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
         title: const Text(
           'ADAPTIVE DIFFICULTY',
           style: TextStyle(
@@ -72,11 +77,11 @@ class AdaptiveDifficultyScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.trending_up, color: Colors.white, size: 28),
-              const SizedBox(width: 12),
-              const Expanded(
+              Icon(Icons.trending_up, color: Colors.white, size: 28),
+              SizedBox(width: 12),
+              Expanded(
                 child: Text(
                   'AI-Powered Progress',
                   style: TextStyle(
@@ -116,7 +121,7 @@ class AdaptiveDifficultyScreen extends StatelessWidget {
               color: AppColors.textGray.withOpacity(0.5),
             ),
             const SizedBox(height: 24),
-            Text(
+            const Text(
               'No adjustments yet',
               style: TextStyle(
                 color: AppColors.textWhite,
@@ -125,7 +130,7 @@ class AdaptiveDifficultyScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'Complete a few workout sessions and AI will analyze your performance to suggest optimal difficulty adjustments',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -296,7 +301,7 @@ class _AdjustmentCard extends StatelessWidget {
                   if (adjustment.newWeight != null) ...[
                     Column(
                       children: [
-                        Text(
+                        const Text(
                           'New Weight',
                           style: TextStyle(
                             color: AppColors.textGray,
@@ -319,7 +324,7 @@ class _AdjustmentCard extends StatelessWidget {
                   if (adjustment.newReps != null) ...[
                     Column(
                       children: [
-                        Text(
+                        const Text(
                           'New Reps',
                           style: TextStyle(
                             color: AppColors.textGray,
@@ -359,7 +364,7 @@ class _AdjustmentCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   Icons.lightbulb_outline,
                   color: AppColors.textGray,
                   size: 18,
@@ -368,7 +373,7 @@ class _AdjustmentCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     adjustment.reasoning,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textGray,
                       fontSize: 13,
                       height: 1.4,
@@ -420,11 +425,11 @@ class _AdjustmentCard extends StatelessWidget {
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: AppColors.textGray),
+                    side: const BorderSide(color: AppColors.textGray),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
-                  icon: Icon(Icons.close, color: AppColors.textGray),
-                  label: Text(
+                  icon: const Icon(Icons.close, color: AppColors.textGray),
+                  label: const Text(
                     'DISMISS',
                     style: TextStyle(
                       color: AppColors.textGray,

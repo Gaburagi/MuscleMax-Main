@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -8,9 +7,11 @@ import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/body_measurement_provider.dart';
 import '../providers/workout_provider.dart';
 import '../utils/app_colors.dart';
+import '../utils/routes.dart';
 
 class ProgressReportsScreen extends StatefulWidget {
   const ProgressReportsScreen({super.key});
@@ -21,7 +22,7 @@ class ProgressReportsScreen extends StatefulWidget {
 
 class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
   String _selectedPeriod = 'week'; // week, month, 3months, 6months, year
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +30,10 @@ class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
       backgroundColor: AppColors.backgroundDark,
       appBar: AppBar(
         backgroundColor: AppColors.backgroundCard,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go(AppRoutes.progressHub),
+        ),
         title: const Text('Progress Reports'),
         actions: [
           IconButton(
@@ -61,56 +66,73 @@ class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       color: AppColors.backgroundCard,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           const Text(
-            'Report Period',
+            'Report Period:',
             style: TextStyle(
               color: AppColors.textWhite,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildPeriodChip('Last 7 Days', 'week'),
-                const SizedBox(width: 8),
-                _buildPeriodChip('Last 30 Days', 'month'),
-                const SizedBox(width: 8),
-                _buildPeriodChip('Last 3 Months', '3months'),
-                const SizedBox(width: 8),
-                _buildPeriodChip('Last 6 Months', '6months'),
-                const SizedBox(width: 8),
-                _buildPeriodChip('Last Year', 'year'),
-              ],
+          const SizedBox(width: 16),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundDark,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: AppColors.primaryRed.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedPeriod,
+                  isExpanded: true,
+                  dropdownColor: AppColors.backgroundCard,
+                  icon: const Icon(Icons.arrow_drop_down, color: AppColors.textWhite),
+                  style: const TextStyle(
+                    color: AppColors.textWhite,
+                    fontSize: 16,
+                  ),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'week',
+                      child: Text('Last 7 Days'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'month',
+                      child: Text('Last 30 Days'),
+                    ),
+                    DropdownMenuItem(
+                      value: '3months',
+                      child: Text('Last 3 Months'),
+                    ),
+                    DropdownMenuItem(
+                      value: '6months',
+                      child: Text('Last 6 Months'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'year',
+                      child: Text('Last Year'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedPeriod = value;
+                      });
+                    }
+                  },
+                ),
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPeriodChip(String label, String value) {
-    final isSelected = _selectedPeriod == value;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _selectedPeriod = value;
-        });
-      },
-      backgroundColor: AppColors.backgroundDark,
-      selectedColor: AppColors.primaryRed,
-      labelStyle: TextStyle(
-        color: isSelected ? AppColors.textWhite : AppColors.textGray,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      checkmarkColor: AppColors.textWhite,
     );
   }
 
@@ -809,7 +831,7 @@ class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
               pw.Center(
                 child: pw.Text(
                   'Generated by MuscleMax on ${DateFormat('MMMM dd, yyyy').format(DateTime.now())}',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                     color: PdfColors.grey,
                     fontSize: 10,
                   ),
@@ -856,7 +878,7 @@ class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
         children: [
           pw.Text(
             label,
-            style: pw.TextStyle(
+            style: const pw.TextStyle(
               color: PdfColors.grey700,
               fontSize: 12,
             ),

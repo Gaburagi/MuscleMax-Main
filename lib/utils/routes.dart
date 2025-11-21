@@ -28,6 +28,13 @@ import '../screens/progress_photos_screen.dart';
 import '../screens/progress_reports_screen.dart';
 import '../screens/achievements_screen.dart';
 import '../screens/leaderboards_screen.dart';
+import '../screens/training_hub_screen.dart';
+import '../screens/progress_hub_screen.dart';
+import '../screens/quick_workout_generator_screen.dart';
+import '../screens/goal_prediction_screen.dart';
+import '../screens/adaptive_difficulty_screen.dart';
+import '../screens/recovery_dashboard_screen.dart';
+import '../screens/workout_recommendations_screen.dart';
 
 // Track last navigation index for smooth transitions
 int _lastNavIndex = 0;
@@ -42,9 +49,13 @@ class AppRoutes {
   static const String profileSetup = '/profile-setup';
   static const String home = '/home';
   static const String training = '/training';
+  static const String trainingHub = '/training-hub';
   static const String profile = '/profile';
   static const String progress = '/progress';
+  static const String progressHub = '/progress-hub';
   static const String nutrition = '/nutrition';
+  static const String achievements = '/achievements';
+  static const String workouts = '/workouts';
   static const String workoutDetail = '/workout-detail';
   static const String activeWorkout = '/active-workout';
   static const String workoutSummary = '/workout-summary';
@@ -55,6 +66,8 @@ class AppRoutes {
   static const String workoutHistory = '/workout-history';
   static const String community = '/community';
   static const String friends = '/friends';
+  static const String quickWorkout = '/quick-workout';
+  static const String goals = '/goals';
   
   static final GoRouter router = GoRouter(
     initialLocation: splash,
@@ -102,9 +115,13 @@ class AppRoutes {
         path: training,
         pageBuilder: (context, state) => _buildPageWithSlideTransition(
           state,
-          const TrainingScreen(),
+          const TrainingHubScreen(),
           1,
         ),
+      ),
+      GoRoute(
+        path: trainingHub,
+        builder: (context, state) => const TrainingHubScreen(),
       ),
       GoRoute(
         path: profile,
@@ -118,9 +135,13 @@ class AppRoutes {
         path: progress,
         pageBuilder: (context, state) => _buildPageWithSlideTransition(
           state,
-          const ProgressScreen(),
+          const ProgressHubScreen(),
           2,
         ),
+      ),
+      GoRoute(
+        path: progressHub,
+        builder: (context, state) => const ProgressHubScreen(),
       ),
       GoRoute(
         path: nutrition,
@@ -206,6 +227,26 @@ class AppRoutes {
       GoRoute(
         path: '/leaderboards',
         builder: (context, state) => const LeaderboardsScreen(),
+      ),
+      GoRoute(
+        path: quickWorkout,
+        builder: (context, state) => const QuickWorkoutGeneratorScreen(),
+      ),
+      GoRoute(
+        path: goals,
+        builder: (context, state) => const GoalPredictionScreen(),
+      ),
+      GoRoute(
+        path: '/adaptive-difficulty',
+        builder: (context, state) => const AdaptiveDifficultyScreen(),
+      ),
+      GoRoute(
+        path: '/recovery-dashboard',
+        builder: (context, state) => const RecoveryDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/workout-recommendations',
+        builder: (context, state) => const WorkoutRecommendationsScreen(),
       ),
     ],
   );

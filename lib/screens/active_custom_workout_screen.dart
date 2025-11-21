@@ -5,6 +5,7 @@ import '../models/custom_workout_model.dart';
 import '../providers/custom_workout_provider.dart';
 import '../providers/body_measurement_provider.dart';
 import '../providers/gamification_provider.dart';
+import '../providers/profile_stats_provider.dart';
 import '../providers/social_provider.dart';
 import '../providers/ai_workout_provider.dart';
 import '../models/ai_models.dart';
@@ -89,6 +90,15 @@ class _ActiveCustomWorkoutScreenState extends State<ActiveCustomWorkoutScreen> {
     
     // Award gamification rewards
     final result = await gamificationProvider.onWorkoutCompleted();
+    
+    // Update profile stats
+    final profileStatsProvider = context.read<ProfileStatsProvider>();
+    await profileStatsProvider.updateWorkoutStats(
+      workoutsIncrement: 1,
+      weightLifted: 0, // Would need to track actual weight
+      caloriesBurned: (_workoutSecondsElapsed ~/ 60) * 5, // Rough estimate: 5 cal/min
+      exerciseName: workout?.exercises.first.template.name ?? 'Custom Workout',
+    );
     
     // Track muscle recovery for AI (based on workout category)
     final aiProvider = context.read<AIWorkoutProvider>();

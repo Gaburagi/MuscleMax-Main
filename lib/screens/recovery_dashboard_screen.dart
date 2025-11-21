@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/ai_workout_provider.dart';
 import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
@@ -54,7 +55,10 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.backgroundDark,
         elevation: 0,
-        automaticallyImplyLeading: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => context.pop(),
+        ),
         title: const Text(
           'RECOVERY & READINESS',
           style: TextStyle(
@@ -187,20 +191,9 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
               ),
             ),
             
-            const SizedBox(height: 100), // Space for bottom button
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pop(context),
-        backgroundColor: AppColors.primaryRed,
-        icon: const Icon(Icons.home),
-        label: const Text(
-          'BACK TO HOME',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
