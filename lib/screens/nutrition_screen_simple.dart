@@ -30,8 +30,8 @@ class NutritionScreen extends StatelessWidget {
               return Column(
                 children: [
                   // Header
-                  Padding(
-                    padding: const EdgeInsets.all(20),
+                  const Padding(
+                    padding: EdgeInsets.all(20),
                     child: Text(
                       'NUTRITION',
                       style: TextStyle(
@@ -67,17 +67,17 @@ class NutritionScreen extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.local_drink, color: Colors.lightBlue, size: 32),
+                              const Icon(Icons.local_drink, color: Colors.lightBlue, size: 32),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Text(
                                   'Water: ${nutrition.waterIntake}ml',
-                                  style: TextStyle(color: AppColors.textWhite, fontSize: 16),
+                                  style: const TextStyle(color: AppColors.textWhite, fontSize: 16),
                                 ),
                               ),
                               IconButton(
                                 onPressed: () => provider.addWaterIntake(250),
-                                icon: Icon(Icons.add_circle, color: AppColors.primaryRed, size: 32),
+                                icon: const Icon(Icons.add_circle, color: AppColors.primaryRed, size: 32),
                               ),
                             ],
                           ),
@@ -89,7 +89,7 @@ class NutritionScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            const Text(
                               'MEALS',
                               style: TextStyle(
                                 color: AppColors.textWhite,
@@ -104,15 +104,15 @@ class NutritionScreen extends StatelessWidget {
                                   context: context,
                                   builder: (_) => AlertDialog(
                                     backgroundColor: AppColors.backgroundCard,
-                                    title: Text('Add Meal', style: TextStyle(color: AppColors.textWhite)),
-                                    content: Text(
+                                    title: const Text('Add Meal', style: TextStyle(color: AppColors.textWhite)),
+                                    content: const Text(
                                       'Meal tracking coming soon!',
                                       style: TextStyle(color: AppColors.textWhite),
                                     ),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(context),
-                                        child: Text('OK'),
+                                        child: const Text('OK'),
                                       ),
                                     ],
                                   ),
@@ -120,9 +120,9 @@ class NutritionScreen extends StatelessWidget {
                               },
                               style: TextButton.styleFrom(
                                 backgroundColor: AppColors.primaryRed,
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               ),
-                              child: Text('ADD', style: TextStyle(color: AppColors.textWhite)),
+                              child: const Text('ADD', style: TextStyle(color: AppColors.textWhite)),
                             ),
                           ],
                         ),
@@ -146,7 +146,7 @@ class NutritionScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNav(currentIndex: 4),
+      bottomNavigationBar: const _BottomNav(currentIndex: 4),
     );
   }
 
@@ -162,7 +162,7 @@ class NutritionScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textGray,
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -171,7 +171,7 @@ class NutritionScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textWhite,
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -183,7 +183,7 @@ class NutritionScreen extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               backgroundColor: AppColors.backgroundDark,
-              valueColor: AlwaysStoppedAnimation(AppColors.primaryRed),
+              valueColor: const AlwaysStoppedAnimation(AppColors.primaryRed),
               minHeight: 6,
             ),
           ),
@@ -209,7 +209,7 @@ class NutritionScreen extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textWhite,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -218,7 +218,7 @@ class NutritionScreen extends StatelessWidget {
               if (totalCals > 0)
                 Text(
                   '${totalCals.toInt()} kcal',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.primaryRed,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -229,7 +229,7 @@ class NutritionScreen extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             meals.isEmpty ? 'No meals added' : '${meals.length} meal(s)',
-            style: TextStyle(color: AppColors.textGray, fontSize: 12),
+            style: const TextStyle(color: AppColors.textGray, fontSize: 12),
           ),
         ],
       ),

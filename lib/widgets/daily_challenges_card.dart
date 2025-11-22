@@ -39,7 +39,7 @@ class DailyChallengesCard extends StatelessWidget {
                       color: AppColors.primaryRed.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.track_changes,
                       color: AppColors.primaryRed,
                       size: 20,
@@ -60,7 +60,7 @@ class DailyChallengesCard extends StatelessWidget {
                       ),
                       Text(
                         '$completedCount / ${challenges.length} Completed',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textGray,
                           fontSize: 11,
                         ),
@@ -193,7 +193,7 @@ class _ChallengeItem extends StatelessWidget {
                     ),
                     Text(
                       challenge.description,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 11,
                       ),
@@ -245,7 +245,7 @@ class _ChallengeItem extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 '${challenge.currentProgress}/${challenge.targetValue}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textGray,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,

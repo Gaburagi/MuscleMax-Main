@@ -339,9 +339,9 @@ class _WorkoutShareScreenState extends State<WorkoutShareScreen> {
             
             const SizedBox(height: 24),
             
-          Text(
+          const Text(
             'Share your progress with friends!',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textGray,
               fontSize: 14,
             ),
@@ -418,7 +418,7 @@ class _WorkoutShareScreenState extends State<WorkoutShareScreen> {
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
+                        gradient: const LinearGradient(
                           colors: [
                             AppColors.primaryRed,
                             AppColors.accentOrange,
@@ -586,7 +586,7 @@ class _WorkoutShareScreenState extends State<WorkoutShareScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
+                                gradient: const LinearGradient(
                                   colors: [
                                     AppColors.accentOrange,
                                     AppColors.accentOrangeDeep,

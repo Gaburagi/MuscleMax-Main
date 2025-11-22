@@ -458,10 +458,10 @@ class ProfileStatusWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.mood, color: Colors.white24, size: 32),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Set your status',
@@ -526,7 +526,7 @@ class ProfileStatusWidget extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.edit, color: Colors.white70, size: 18),
+                const Icon(Icons.edit, color: Colors.white70, size: 18),
               ],
             ),
           ),
@@ -562,10 +562,10 @@ class SocialLinksWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.white12),
               ),
-              child: Row(
+              child: const Row(
                 children: [
                   Icon(Icons.link, color: Colors.white24, size: 24),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Add social links',
@@ -906,11 +906,11 @@ class FeaturedBadgesWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.white12),
           ),
-          child: Row(
+          child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.emoji_events, color: Colors.white24, size: 20),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Text(
                 'Feature badges',
                 style: TextStyle(
@@ -918,7 +918,7 @@ class FeaturedBadgesWidget extends StatelessWidget {
                   fontSize: 12,
                 ),
               ),
-              const SizedBox(width: 4),
+              SizedBox(width: 4),
               Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 14),
             ],
           ),

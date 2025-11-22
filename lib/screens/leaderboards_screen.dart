@@ -91,11 +91,11 @@ class _LeaderboardsScreenState extends State<LeaderboardsScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.calendar_today, size: 16, color: AppColors.textGray),
+                const Icon(Icons.calendar_today, size: 16, color: AppColors.textGray),
                 const SizedBox(width: 8),
                 Text(
                   _timeFilter,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textGray,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -168,7 +168,7 @@ class _LeaderboardList extends StatelessWidget {
               color: AppColors.textGray.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'No rankings yet',
               style: TextStyle(
                 color: AppColors.textGray,
@@ -243,7 +243,7 @@ class _LeaderboardCard extends StatelessWidget {
       child: Center(
         child: Text(
           '${entry.rank}',
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textGray,
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -328,7 +328,7 @@ class _LeaderboardCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Level ${entry.level} • ${entry.title}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.textGray,
                       fontSize: 12,
                     ),
@@ -358,7 +358,7 @@ class _LeaderboardCard extends StatelessWidget {
               ),
               Text(
                 suffix,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.textGray,
                   fontSize: 11,
                 ),

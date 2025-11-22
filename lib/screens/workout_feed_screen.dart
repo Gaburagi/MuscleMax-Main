@@ -54,7 +54,7 @@ class _WorkoutFeedScreenState extends State<WorkoutFeedScreen> {
                     color: AppColors.textGray.withOpacity(0.5),
                   ),
                   const SizedBox(height: 16),
-                  Text(
+                  const Text(
                     'No workouts yet',
                     style: TextStyle(
                       color: AppColors.textGray,
@@ -62,7 +62,7 @@ class _WorkoutFeedScreenState extends State<WorkoutFeedScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  const Text(
                     'Complete a workout to share with friends!',
                     style: TextStyle(
                       color: AppColors.textGray,
@@ -110,7 +110,7 @@ class _WorkoutFeedScreenState extends State<WorkoutFeedScreen> {
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Write a comment...',
-            hintStyle: TextStyle(color: AppColors.textGray),
+            hintStyle: const TextStyle(color: AppColors.textGray),
             filled: true,
             fillColor: AppColors.backgroundDark,
             border: OutlineInputBorder(
@@ -127,7 +127,7 @@ class _WorkoutFeedScreenState extends State<WorkoutFeedScreen> {
               _commentController.clear();
               Navigator.pop(context);
             },
-            child: Text(
+            child: const Text(
               'CANCEL',
               style: TextStyle(color: AppColors.textGray),
             ),
@@ -231,7 +231,7 @@ class _WorkoutPostCard extends StatelessWidget {
                     ),
                     Text(
                       _formatTimestamp(post.timestamp),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 12,
                       ),
@@ -247,7 +247,7 @@ class _WorkoutPostCard extends StatelessWidget {
           // Workout details
           Row(
             children: [
-              Icon(Icons.fitness_center, color: AppColors.primaryRed, size: 20),
+              const Icon(Icons.fitness_center, color: AppColors.primaryRed, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -306,11 +306,11 @@ class _WorkoutPostCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.emoji_events, color: Colors.purple, size: 18),
-                      const SizedBox(width: 6),
-                      const Text(
+                      Icon(Icons.emoji_events, color: Colors.purple, size: 18),
+                      SizedBox(width: 6),
+                      Text(
                         'New Personal Record!',
                         style: TextStyle(
                           color: Colors.purple,
@@ -423,7 +423,7 @@ class _WorkoutPostCard extends StatelessWidget {
                 },
                 child: Text(
                   'View all ${post.comments.length} comments',
-                  style: TextStyle(color: AppColors.textGray, fontSize: 12),
+                  style: const TextStyle(color: AppColors.textGray, fontSize: 12),
                 ),
               ),
           ],
@@ -553,7 +553,7 @@ class _CommentTile extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       _formatTimestamp(comment.timestamp),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.textGray,
                         fontSize: 11,
                       ),
@@ -563,7 +563,7 @@ class _CommentTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   comment.text,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textGray,
                     fontSize: 13,
                   ),

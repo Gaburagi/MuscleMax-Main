@@ -182,7 +182,7 @@ class _LevelUpDialogState extends State<LevelUpDialog>
                 // New Title
                 Text(
                   widget.newTitle.toUpperCase(),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.primaryRed,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -226,7 +226,7 @@ class _LevelUpDialogState extends State<LevelUpDialog>
                 const SizedBox(height: 24),
 
                 // Motivational Message
-                Text(
+                const Text(
                   'Keep pushing your limits!\nYou\'re getting stronger every day!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
