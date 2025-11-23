@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
+import '../widgets/bottom_navigation.dart';
+import '../widgets/ai_chat_button.dart';
 import '../providers/user_provider.dart';
 import '../providers/workout_provider.dart';
 import '../providers/gamification_provider.dart';
@@ -25,7 +27,9 @@ class HomeScreen extends StatelessWidget {
     final user = userProvider.user;
 
     return Scaffold(
-      body: Container(
+      body: Stack(
+        children: [
+          Container(
         decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
         ),
@@ -305,7 +309,10 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: const _BottomNav(currentIndex: 0),
+          const AIChatButton(),
+        ],
+      ),
+      bottomNavigationBar: const BottomNavigation(currentIndex: 0),
     );
   }
 }

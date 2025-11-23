@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
 import '../providers/workout_provider.dart';
 import '../utils/routes.dart';
+import '../widgets/bottom_navigation.dart';
 
 class TrainingScreen extends StatefulWidget {
   const TrainingScreen({super.key});
@@ -117,7 +118,7 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNav(currentIndex: 1),
+      bottomNavigationBar: const BottomNavigation(currentIndex: 1),
     );
   }
 }

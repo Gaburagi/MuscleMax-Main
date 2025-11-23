@@ -34,6 +34,13 @@ dependencies:
   
   # Charts
   fl_chart: ^1.1.1
+  
+  # UUID Generator
+  uuid: ^4.5.1
+  
+  # HTTP requests
+  http: ^1.2.0
+  
   image_picker: ^1.2.1
   image_cropper: ^11.0.0
   path_provider: ^2.1.5
@@ -46,6 +53,7 @@ dependencies:
   
   # URL Handling
   url_launcher: ^6.3.1
+  google_generative_ai: ^0.4.7
 
 dev_dependencies:
   flutter_test:

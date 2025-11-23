@@ -5,6 +5,7 @@ import '../providers/user_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/bottom_navigation.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -122,7 +123,7 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNav(currentIndex: _currentNavIndex),
+      bottomNavigationBar: const BottomNavigation(currentIndex: 2),
     );
   }
 

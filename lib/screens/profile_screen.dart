@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
+import '../widgets/bottom_navigation.dart';
 import '../providers/user_provider.dart';
 import '../utils/routes.dart';
 
@@ -141,7 +142,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNav(currentIndex: 3),
+      bottomNavigationBar: const BottomNavigation(currentIndex: 3),
     );
   }
 }
