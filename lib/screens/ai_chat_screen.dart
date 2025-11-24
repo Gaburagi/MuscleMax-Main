@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../utils/app_colors.dart';
 
 class AIChatScreen extends StatefulWidget {
@@ -22,14 +23,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
     // Initialize Gemini model
     const apiKey = 'AIzaSyCbnlW0vBTD2b_QipCxGaLniHIT-KjXtS8';
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.0-flash-exp',
       apiKey: apiKey,
-      systemInstruction: Content.system(
-        'You are a professional fitness and nutrition coach AI assistant for MuscleMax app. '
-        'Provide expert advice on workouts, exercises, nutrition, meal planning, and fitness goals. '
-        'Be motivating, supportive, and concise. Always prioritize user safety and recommend consulting '
-        'professionals for medical concerns.',
-      ),
     );
     
     // Welcome message
@@ -66,7 +61,14 @@ class _AIChatScreenState extends State<AIChatScreen> {
     _scrollToBottom();
 
     try {
-      final chat = _model.startChat();
+      final chat = _model.startChat(history: [
+        Content.text('You are a professional fitness and nutrition coach AI assistant for MuscleMax app. '
+            'Provide expert advice on workouts, exercises, nutrition, meal planning, and fitness goals. '
+            'Be motivating, supportive, and concise. Always prioritize user safety and recommend consulting '
+            'professionals for medical concerns. Respond with "Understood, I\'m ready to help!" to confirm.'),
+        Content.model([TextPart('Understood, I\'m ready to help! 💪')]),
+      ]);
+      
       final response = await chat.sendMessage(Content.text(text));
       
       setState(() {
@@ -318,12 +320,23 @@ class _MessageBubble extends StatelessWidget {
                     : AppColors.backgroundCard,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Text(
-                message.text,
-                style: const TextStyle(
-                  color: AppColors.textWhite,
-                  fontSize: 14,
-                  height: 1.5,
+              child: MarkdownBody(
+                data: message.text,
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(
+                    color: AppColors.textWhite,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                  strong: const TextStyle(
+                    color: AppColors.textWhite,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  listBullet: const TextStyle(
+                    color: AppColors.textWhite,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
