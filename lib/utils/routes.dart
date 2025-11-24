@@ -14,7 +14,7 @@ import '../screens/workout_detail_screen.dart';
 import '../screens/active_workout_screen.dart';
 import '../screens/workout_summary_screen.dart';
 import '../screens/progress_screen.dart';
-import '../screens/nutrition_screen.dart';
+import '../screens/nutrition_screen_enhanced.dart';
 import '../screens/workout_library_screen.dart';
 import '../screens/workout_builder_screen.dart';
 import '../screens/workout_calendar_screen.dart';
@@ -147,7 +147,7 @@ class AppRoutes {
         path: nutrition,
         pageBuilder: (context, state) => _buildPageWithSlideTransition(
           state,
-          const NutritionScreen(),
+          const NutritionScreenEnhanced(),
           4,
         ),
       ),
