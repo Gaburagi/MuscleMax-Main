@@ -16,64 +16,117 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
             child: Column(
               children: [
-                // Header
-                Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
-                      onPressed: () => context.go(AppRoutes.home),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'PROFILE',
-                        style: Theme.of(context).textTheme.displayMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: AppColors.primaryRed),
-                      onPressed: () => context.go(AppRoutes.profileSetup),
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 32),
-                
-                // Profile Picture
+                // Header with background image and profile
                 Container(
-                  width: 100,
-                  height: 100,
+                  height: 280,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.orangeGradient,
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/profile_tab_background.png'),
+                      fit: BoxFit.cover,
+                    ),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.3),
+                        Colors.black.withOpacity(0.7),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
                   ),
-                  child: const Icon(Icons.person, size: 50, color: AppColors.textWhite),
-                ),
-                
-                const SizedBox(height: 16),
-                
-                Text(
-                  user?.fullName ?? 'User',
-                  style: const TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                
-                Text(
-                  user?.email ?? '',
-                  style: const TextStyle(
-                    color: AppColors.textGray,
-                    fontSize: 14,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back, color: Colors.white, shadows: [
+                                Shadow(color: Colors.black, blurRadius: 8),
+                              ]),
+                              onPressed: () => context.go(AppRoutes.home),
+                            ),
+                            Text(
+                              'PROFILE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'BebasNeue',
+                                letterSpacing: 2,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.8),
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.white, shadows: [
+                                Shadow(color: Colors.black, blurRadius: 8),
+                              ]),
+                              onPressed: () => context.go(AppRoutes.profileSetup),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        // Profile Picture with glow
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: AppColors.orangeGradient,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryRed.withOpacity(0.5),
+                                blurRadius: 24,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.person, size: 50, color: AppColors.textWhite),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          user?.fullName ?? 'User',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.8),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user?.email ?? '',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.8),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 
@@ -210,108 +263,6 @@ class _InfoCard extends StatelessWidget {
             style: const TextStyle(
               color: AppColors.textWhite,
               fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  final int currentIndex;
-
-  const _BottomNav({required this.currentIndex});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundDark,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 10,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _NavItem(
-                icon: Icons.home,
-                label: 'Home',
-                isSelected: currentIndex == 0,
-                onTap: () => context.go(AppRoutes.home),
-              ),
-              _NavItem(
-                icon: Icons.fitness_center,
-                label: 'Training',
-                isSelected: currentIndex == 1,
-                onTap: () => context.go(AppRoutes.training),
-              ),
-              _NavItem(
-                icon: Icons.bar_chart,
-                label: 'Progress',
-                isSelected: currentIndex == 2,
-                onTap: () => context.go(AppRoutes.progress),
-              ),
-              _NavItem(
-                icon: Icons.person,
-                label: 'Profile',
-                isSelected: currentIndex == 3,
-                onTap: () => context.go(AppRoutes.profile),
-              ),
-              _NavItem(
-                icon: Icons.restaurant,
-                label: 'Nutrition',
-                isSelected: currentIndex == 4,
-                onTap: () => context.go(AppRoutes.nutrition),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? AppColors.primaryRed : AppColors.textGray,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? AppColors.primaryRed : AppColors.textGray,
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
         ],

@@ -62,7 +62,7 @@ class _RecoveryDashboardScreenState extends State<RecoveryDashboardScreen> {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go(AppRoutes.home);
+              context.go(AppRoutes.training);
             }
           },
         ),

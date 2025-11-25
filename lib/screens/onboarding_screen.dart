@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../utils/app_colors.dart';
@@ -62,6 +61,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _skip() {
     context.go(AppRoutes.login);
+  }
+
+  IconData _getIconForPage(String highlight) {
+    switch (highlight) {
+      case 'FITNESS':
+        return Icons.fitness_center;
+      case 'PROGRESS':
+        return Icons.trending_up;
+      case 'GOALS':
+        return Icons.emoji_events;
+      default:
+        return Icons.fitness_center;
+    }
   }
 
   @override
@@ -137,10 +149,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Image
-          SvgPicture.asset(
-            page.image,
+          // Image Container with Gradient Background
+          Container(
             height: 280,
+            width: 280,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primaryRed.withOpacity(0.3),
+                  AppColors.primaryRed.withOpacity(0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Center(
+              child: Icon(
+                _getIconForPage(page.highlight),
+                size: 120,
+                color: AppColors.primaryRed,
+              ),
+            ),
           ),
           const SizedBox(height: 48),
           

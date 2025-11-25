@@ -95,7 +95,7 @@ class _GoalPredictionScreenState extends State<GoalPredictionScreen> {
             if (context.canPop()) {
               context.pop();
             } else {
-              context.go(AppRoutes.home);
+              context.go(AppRoutes.progress);
             }
           },
         ),

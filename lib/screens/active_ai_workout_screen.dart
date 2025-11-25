@@ -9,6 +9,8 @@ import '../providers/social_provider.dart';
 // import '../providers/workout_history_provider.dart'; // Will be created later
 import '../utils/app_colors.dart';
 import 'workout_share_screen.dart';
+import '../widgets/exercise_video_player.dart';
+import '../data/exercise_database.dart';
 
 class ActiveAIWorkoutScreen extends StatefulWidget {
   final AIGeneratedWorkout workout;
@@ -128,11 +130,30 @@ class _ActiveAIWorkoutScreenState extends State<ActiveAIWorkoutScreen> {
   }
 
   Widget _buildExerciseView() {
+    // Find the exercise in the database to get video URL
+    final exerciseData = ExerciseDatabase.findExerciseByName(_currentExercise.exerciseName);
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Video Player Section
+          if (exerciseData?.videoUrl != null && exerciseData!.videoUrl!.isNotEmpty)
+            Container(
+              width: double.infinity,
+              height: 250,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: AppColors.backgroundCard,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: ExerciseVideoPlayer(
+                videoUrl: exerciseData.videoUrl!,
+                autoPlay: true,
+              ),
+            ),
           _buildExerciseHeader(),
           const SizedBox(height: 24),
           _buildSetInfo(),

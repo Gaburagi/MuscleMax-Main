@@ -4,6 +4,7 @@ import '../models/workout_model.dart';
 import '../providers/workout_provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
+import '../widgets/exercise_video_player.dart';
 import 'package:go_router/go_router.dart';
 
 class WorkoutDetailScreen extends StatelessWidget {
@@ -219,7 +220,7 @@ class WorkoutDetailScreen extends StatelessWidget {
   }
 }
 
-class _ExerciseCard extends StatelessWidget {
+class _ExerciseCard extends StatefulWidget {
   final Exercise exercise;
   final int index;
 
@@ -229,72 +230,199 @@ class _ExerciseCard extends StatelessWidget {
   });
 
   @override
+  State<_ExerciseCard> createState() => _ExerciseCardState();
+}
+
+class _ExerciseCardState extends State<_ExerciseCard> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.backgroundCard,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
         children: [
-          // Exercise Number
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.primaryRed.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: const TextStyle(
-                  color: AppColors.primaryRed,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isExpanded = !_isExpanded;
+              });
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Exercise Number
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryRed.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${widget.index + 1}',
+                        style: const TextStyle(
+                          color: AppColors.primaryRed,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+
+                  // Exercise Info
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.exercise.name,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: AppColors.textWhite,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (widget.exercise.videoUrl != null)
+                              Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryRed.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.play_circle_outline,
+                                      color: AppColors.primaryRed,
+                                      size: 14,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'VIDEO',
+                                      style: TextStyle(
+                                        color: AppColors.primaryRed,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${widget.exercise.sets} sets × ${widget.exercise.reps} reps',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textGray,
+                          ),
+                        ),
+                        if ((widget.exercise.restSeconds ?? 0) > 0)
+                          Text(
+                            'Rest: ${widget.exercise.restSeconds}s',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textGray,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // Expand/Collapse Icon
+                  Icon(
+                    _isExpanded ? Icons.expand_less : Icons.expand_more,
+                    color: AppColors.textGray,
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 16),
 
-          // Exercise Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  exercise.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textWhite,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${exercise.sets} sets × ${exercise.reps} reps',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textGray,
-                  ),
-                ),
-                if ((exercise.restSeconds ?? 0) > 0)
-                  Text(
-                    'Rest: ${exercise.restSeconds}s',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.textGray,
+          // Expanded Content
+          if (_isExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Divider(color: AppColors.backgroundDark, height: 1),
+                  const SizedBox(height: 16),
+
+                  // Video Tutorial
+                  if (widget.exercise.videoUrl != null) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.video_library,
+                          color: AppColors.primaryRed,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Video Tutorial',
+                          style: TextStyle(
+                            color: AppColors.textWhite,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-              ],
-            ),
-          ),
+                    const SizedBox(height: 12),
+                    ExerciseVideoPlayer(
+                      videoUrl: widget.exercise.videoUrl!,
+                      autoPlay: false,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
-          // Chevron
-          const Icon(
-            Icons.chevron_right,
-            color: AppColors.textGray,
-          ),
+                  // Instructions
+                  if (widget.exercise.instructions != null) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.primaryRed,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Instructions',
+                          style: TextStyle(
+                            color: AppColors.textWhite,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      widget.exercise.instructions!,
+                      style: TextStyle(
+                        color: AppColors.textGray,
+                        fontSize: 13,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
         ],
       ),
     );
