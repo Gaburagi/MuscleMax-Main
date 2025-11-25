@@ -1,12 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../widgets/exercise_video_player.dart';
+import '../widgets/local_video_player.dart';
+import 'package:image_picker/image_picker.dart';
 import '../utils/app_colors.dart';
-import '../utils/routes.dart';
 import '../providers/body_measurement_provider.dart';
 import '../models/body_measurement.dart';
-
 class PersonalRecordsScreen extends StatefulWidget {
   const PersonalRecordsScreen({super.key});
 
@@ -15,8 +17,53 @@ class PersonalRecordsScreen extends StatefulWidget {
 }
 
 class _PersonalRecordsScreenState extends State<PersonalRecordsScreen> with SingleTickerProviderStateMixin {
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                context.go('/home');
+              },
+          ),
+          title: const Text('Personal Records'),
+          backgroundColor: AppColors.backgroundDark,
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: AppColors.primaryRed,
+            labelColor: Colors.white,
+            unselectedLabelColor: AppColors.textGray,
+            tabs: const [
+              Tab(text: 'All Records'),
+              Tab(text: 'Timeline'),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildAllRecordsTab(),
+            _buildTimelineTab(),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => _showAddPRDialog(context),
+          backgroundColor: AppColors.primaryRed,
+          icon: const Icon(Icons.add, size: 24),
+          label: const Text(
+            'Add PR',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      );
+    }
   late TabController _tabController;
-  String _selectedFilter = 'all'; // all, recent, this_month
+  String _selectedFilter = 'all';
 
   @override
   void initState() {
@@ -30,35 +77,10 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen> with Sing
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundDark,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => context.go(AppRoutes.progressHub),
-        ),
-        title: const Text('Personal Records'),
-        backgroundColor: AppColors.backgroundDark,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.primaryRed,
-          labelColor: Colors.white,
-          unselectedLabelColor: AppColors.textGray,
-          tabs: const [
-            Tab(text: 'All Records'),
-            Tab(text: 'Timeline'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildAllRecordsTab(),
-          _buildTimelineTab(),
-        ],
-      ),
+  void _showAddPRDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => const _AddPersonalRecordDialog(),
     );
   }
 
@@ -426,6 +448,84 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen> with Sing
                       ],
                     ],
                   ),
+                  // Media preview below PR details
+                  if (record.mediaProofPath != null && record.mediaProofPath!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            Widget mediaWidget;
+                            if (record.mediaProofType == 'photo') {
+                              mediaWidget = Image.file(
+                                File(record.mediaProofPath!),
+                                fit: BoxFit.contain,
+                              );
+                            } else if (record.mediaProofType == 'video') {
+                              mediaWidget = LocalVideoPlayer(videoPath: record.mediaProofPath!);
+                            } else {
+                              mediaWidget = const SizedBox.shrink();
+                            }
+                            return Dialog(
+                              backgroundColor: Colors.transparent,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      color: Colors.black,
+                                    ),
+                                    padding: const EdgeInsets.all(8),
+                                    child: mediaWidget,
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: IconButton(
+                                      icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                                      onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
+                      child: record.mediaProofType == 'photo'
+                          ? Container(
+                              width: double.infinity,
+                              height: 180,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: color, width: 2),
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: Image.file(
+                                File(record.mediaProofPath!),
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Container(
+                              width: double.infinity,
+                              height: 180,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: color, width: 2),
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Container(
+                                    color: Colors.black,
+                                  ),
+                                  const Icon(Icons.play_circle_fill, color: Colors.white, size: 64),
+                                ],
+                              ),
+                            ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -453,3 +553,423 @@ class _PersonalRecordsScreenState extends State<PersonalRecordsScreen> with Sing
     }
   }
 }
+
+class _AddPersonalRecordDialog extends StatefulWidget {
+  const _AddPersonalRecordDialog();
+
+  @override
+  State<_AddPersonalRecordDialog> createState() => _AddPersonalRecordDialogState();
+}
+
+class _AddPersonalRecordDialogState extends State<_AddPersonalRecordDialog> {
+  final _exerciseNameController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _repsController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
+  String _recordType = 'max_weight';
+  File? _mediaFile;
+  String? _mediaType; // 'photo' or 'video'
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void dispose() {
+    _exerciseNameController.dispose();
+    _weightController.dispose();
+    _repsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.backgroundCard,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryRed.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.emoji_events, color: AppColors.primaryRed, size: 24),
+          ),
+          const SizedBox(width: 12),
+          const Text(
+            'Add Personal Record',
+            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 400,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Exercise Details',
+                style: TextStyle(
+                  color: AppColors.textGray,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _buildTextField(
+                'Exercise Name',
+                _exerciseNameController,
+                Icons.fitness_center,
+                keyboardType: TextInputType.text,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _recordType,
+                dropdownColor: AppColors.backgroundCard,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Record Type',
+                  labelStyle: const TextStyle(color: AppColors.textGray),
+                  prefixIcon: const Icon(Icons.category, color: AppColors.primaryRed),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: AppColors.textGray.withOpacity(0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.backgroundDark,
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'max_weight', child: Text('Max Weight')),
+                  DropdownMenuItem(value: 'max_volume', child: Text('Max Volume')),
+                ],
+                onChanged: (value) => setState(() => _recordType = value!),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Performance',
+                style: TextStyle(
+                  color: AppColors.textGray,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'Weight (kg)',
+                      _weightController,
+                      Icons.monitor_weight,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField(
+                      'Reps',
+                      _repsController,
+                      Icons.repeat,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Proof (Optional)',
+                style: TextStyle(
+                  color: AppColors.textGray,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickPhoto,
+                      icon: const Icon(Icons.photo_camera, size: 20),
+                      label: const Text('Photo'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _mediaType == 'photo' ? AppColors.primaryRed : Colors.white,
+                        side: BorderSide(
+                          color: _mediaType == 'photo' ? AppColors.primaryRed : AppColors.textGray.withOpacity(0.3),
+                          width: 2,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _pickVideo,
+                      icon: const Icon(Icons.videocam, size: 20),
+                      label: const Text('Video'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _mediaType == 'video' ? AppColors.primaryRed : Colors.white,
+                        side: BorderSide(
+                          color: _mediaType == 'video' ? AppColors.primaryRed : AppColors.textGray.withOpacity(0.3),
+                          width: 2,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (_mediaFile != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryRed.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primaryRed.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _mediaType == 'photo' ? Icons.image : Icons.videocam,
+                        color: AppColors.primaryRed,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _mediaFile!.path.split('/').last,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppColors.primaryRed, size: 20),
+                        onPressed: () => setState(() {
+                          _mediaFile = null;
+                          _mediaType = null;
+                        }),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              InkWell(
+                onTap: _selectDate,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundDark,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.textGray.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today, color: AppColors.primaryRed, size: 20),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Date Achieved',
+                            style: TextStyle(color: AppColors.textGray, fontSize: 12),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            DateFormat('MMMM dd, yyyy').format(_selectedDate),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.arrow_forward_ios, color: AppColors.textGray, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: AppColors.textGray, fontSize: 16)),
+        ),
+        ElevatedButton.icon(
+          onPressed: _savePR,
+          icon: const Icon(Icons.check, size: 20),
+          label: const Text('Save PR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryRed,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      style: const TextStyle(color: Colors.white, fontSize: 16),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: AppColors.textGray),
+        prefixIcon: Icon(icon, color: AppColors.primaryRed),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.textGray.withOpacity(0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primaryRed, width: 2),
+        ),
+        filled: true,
+        fillColor: AppColors.backgroundDark,
+      ),
+    );
+  }
+
+  Future<void> _pickPhoto() async {
+    try {
+      final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
+      if (photo != null) {
+        setState(() {
+          _mediaFile = File(photo.path);
+          _mediaType = 'photo';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking photo: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    try {
+      final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+      if (video != null) {
+        setState(() {
+          _mediaFile = File(video.path);
+          _mediaType = 'video';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking video: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: AppColors.primaryRed,
+              surface: AppColors.backgroundCard,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  void _savePR() {
+    if (_exerciseNameController.text.isEmpty ||
+        _weightController.text.isEmpty ||
+        _repsController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please fill in all fields'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final weight = double.tryParse(_weightController.text);
+    final reps = int.tryParse(_repsController.text);
+
+    if (weight == null || reps == null || weight <= 0 || reps <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter valid weight and reps'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final pr = PersonalRecord(
+      id: 'pr_${DateTime.now().millisecondsSinceEpoch}',
+      exerciseId: _exerciseNameController.text.toLowerCase().replaceAll(' ', '_'),
+      exerciseName: _exerciseNameController.text,
+      weight: weight,
+      reps: reps,
+      recordType: _recordType,
+      achievedDate: _selectedDate,
+      mediaProofPath: _mediaFile?.path,
+      mediaProofType: _mediaType,
+    );
+
+    context.read<BodyMeasurementProvider>().addPersonalRecord(pr);
+    
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.emoji_events, color: Colors.amber),
+            const SizedBox(width: 12),
+            const Text('Personal Record added successfully!'),
+          ],
+        ),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+}
+

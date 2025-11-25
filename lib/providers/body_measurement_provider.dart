@@ -202,6 +202,17 @@ class BodyMeasurementProvider with ChangeNotifier {
     }
   }
 
+  Future<void> addPersonalRecord(PersonalRecord record) async {
+    // Remove any existing record of the same type for this exercise
+    _personalRecords.removeWhere((pr) => 
+      pr.exerciseId == record.exerciseId && pr.recordType == record.recordType
+    );
+    
+    _personalRecords.add(record);
+    await _savePersonalRecords();
+    notifyListeners();
+  }
+
   Future<void> _savePersonalRecords() async {
     final prefs = await SharedPreferences.getInstance();
     final data = jsonEncode(_personalRecords.map((pr) => pr.toJson()).toList());

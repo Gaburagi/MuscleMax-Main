@@ -200,78 +200,31 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           ),
         ),
       ),
-      body: Stack(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          TabBarView(
-            controller: _tabController,
-            children: [
-              _AchievementsList(achievements: achievements),
-              _AchievementsList(
-                achievements: achievements
-                    .where((a) => a.category == 'workouts')
-                    .toList(),
-              ),
-              _AchievementsList(
-                achievements:
-                    achievements.where((a) => a.category == 'streak').toList(),
-              ),
-              _AchievementsList(
-                achievements:
-                    achievements.where((a) => a.category == 'prs').toList(),
-              ),
-              _AchievementsList(
-                achievements:
-                    achievements.where((a) => a.category == 'social').toList(),
-              ),
-              _AchievementsList(
-                achievements: achievements
-                    .where((a) => a.category == 'nutrition')
-                    .toList(),
-              ),
-            ],
+          _AchievementsList(achievements: achievements),
+          _AchievementsList(
+            achievements: achievements
+                .where((a) => a.category == 'workouts')
+                .toList(),
           ),
-          // Bottom centered back button
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryRed.withOpacity(0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.home, size: 24),
-                  label: const Text(
-                    'BACK TO HOME',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryRed,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    elevation: 8,
-                  ),
-                ),
-              ),
-            ),
+          _AchievementsList(
+            achievements:
+                achievements.where((a) => a.category == 'streak').toList(),
+          ),
+          _AchievementsList(
+            achievements:
+                achievements.where((a) => a.category == 'prs').toList(),
+          ),
+          _AchievementsList(
+            achievements:
+                achievements.where((a) => a.category == 'social').toList(),
+          ),
+          _AchievementsList(
+            achievements: achievements
+                .where((a) => a.category == 'nutrition')
+                .toList(),
           ),
         ],
       ),
@@ -489,7 +442,7 @@ class _AchievementsList extends StatelessWidget {
             padding: const EdgeInsets.only(
               left: 16,
               right: 16,
-              bottom: 100, // Extra padding for bottom button
+              bottom: 16,
             ),
             itemCount: sortedAchievements.length,
             itemBuilder: (context, index) {

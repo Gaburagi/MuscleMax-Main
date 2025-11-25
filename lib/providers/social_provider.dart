@@ -354,15 +354,17 @@ class SocialProvider with ChangeNotifier {
 
   // Workout feed methods
   Future<void> postWorkout({
-    required String workoutName,
-    required int durationMinutes,
-    required int exercisesCompleted,
+    String? workoutName,
+    int? durationMinutes,
+    int? exercisesCompleted,
     int? caloriesBurned,
     List<String> personalRecords = const [],
-    int xpGained = 0,
+    int? xpGained,
     List<String> achievements = const [],
     String? note,
     List<String> imageUrls = const [],
+    List<String> videoUrls = const [],
+    String postType = 'general',
   }) async {
     final post = WorkoutPost(
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
@@ -380,6 +382,8 @@ class SocialProvider with ChangeNotifier {
       comments: [],
       note: note,
       imageUrls: imageUrls,
+      videoUrls: videoUrls,
+      postType: postType,
     );
     
     _workoutFeed.insert(0, post);

@@ -294,7 +294,7 @@ class _WorkoutFeedTab extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      post.workoutName,
+                      post.workoutName ?? 'General Post',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
