@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../providers/gamification_provider.dart';
 import '../providers/profile_stats_provider.dart';
-import '../models/gamification_model.dart';
 
 class FeaturedBadgesScreen extends StatefulWidget {
   const FeaturedBadgesScreen({super.key});

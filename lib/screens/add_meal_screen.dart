@@ -18,7 +18,7 @@ class _AddMealScreenState extends State<AddMealScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _mealNameController = TextEditingController();
   String _selectedMealType = 'breakfast';
-  List<FoodEntry> _selectedFoods = [];
+  final List<FoodEntry> _selectedFoods = [];
   List<Food> _searchResults = [];
 
   @override

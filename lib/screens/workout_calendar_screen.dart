@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
 import '../providers/custom_workout_provider.dart';
-import '../models/custom_workout_model.dart';
 import 'package:intl/intl.dart';
 
 class WorkoutCalendarScreen extends StatefulWidget {

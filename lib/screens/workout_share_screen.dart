@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import '../utils/app_colors.dart';
 import '../models/gamification_model.dart';
