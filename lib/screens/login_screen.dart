@@ -93,13 +93,17 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
+    print('Google Sign-In button pressed');
     setState(() => _isGoogleLoading = true);
     
     try {
+      print('Attempting Google Sign-In...');
       final userCredential = await _authService.signInWithGoogle();
+      print('User credential received: ${userCredential?.user?.email}');
       
       if (userCredential == null) {
         // User canceled the sign-in
+        print('User canceled Google Sign-In');
         return;
       }
 

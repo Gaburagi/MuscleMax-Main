@@ -14,11 +14,14 @@ class AuthService {
   // Sign in with Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      print('Starting Google Sign-In flow...');
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      print('Google user: ${googleUser?.email}');
       
       if (googleUser == null) {
         // User canceled the sign-in
+        print('Google Sign-In returned null');
         return null;
       }
 
