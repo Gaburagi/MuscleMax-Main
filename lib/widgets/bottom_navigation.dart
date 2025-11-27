@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
-import '../screens/ai_chat_screen.dart';
 
 class BottomNavigation extends StatelessWidget {
   final int currentIndex;

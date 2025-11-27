@@ -7,7 +7,6 @@ import '../widgets/bottom_navigation.dart';
 import '../providers/nutrition_provider.dart';
 import '../models/nutrition_model.dart';
 import '../screens/ai_chat_screen.dart';
-import '../utils/routes.dart';
 import 'add_meal_screen.dart';
 import 'food_scanner_screen.dart';
 import 'nutrition_history_screen.dart';
