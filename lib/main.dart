@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'utils/app_theme.dart';
 import 'utils/routes.dart';
 import 'providers/user_provider.dart';
@@ -15,8 +17,13 @@ import 'providers/gamification_provider.dart';
 import 'providers/social_provider.dart';
 import 'providers/ai_workout_provider.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   
   // Set status bar to transparent
   SystemChrome.setSystemUIOverlayStyle(
