@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1067955332820",
+    "project_id": "musclemax-ad6d4",
+    "storage_bucket": "musclemax-ad6d4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067955332820:android:59b5799e80a3d1f3cebd41",
+        "android_client_info": {
+          "package_name": "com.example.musclemax"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1067955332820-rfev17fjs2t1mnb4rb1lpaisr86o04vc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.musclemax",
+            "certificate_hash": "d8c330d130df152449e937a7b90d942052751a98"
+          }
+        },
+        {
+          "client_id": "1067955332820-7dvd1jn801bktl7596rrmgn6h827mpn1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr-giMQQwsvzUicvuKa8DL7xQwEV4RRpc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1067955332820-7dvd1jn801bktl7596rrmgn6h827mpn1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

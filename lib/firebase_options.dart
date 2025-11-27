@@ -28,10 +28,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -45,22 +42,25 @@ class DefaultFirebaseOptions {
   }
 
   // TODO: Replace with your actual Firebase configuration
-  // Get these values from Firebase Console > Project Settings > Your apps
+
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+    apiKey: 'AIzaSyBBphcgJSWl8-cFZPubVyJDFa5c4yRbBQE',
+    appId: '1:1067955332820:web:bb3bb9926be0f61ccebd41',
+    messagingSenderId: '1067955332820',
+    projectId: 'musclemax-ad6d4',
+    authDomain: 'musclemax-ad6d4.firebaseapp.com',
+    storageBucket: 'musclemax-ad6d4.firebasestorage.app',
+    measurementId: 'G-DNMJ0QDCS3',
   );
 
+  // Get these values from Firebase Console > Project Settings > Your apps
+
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+    apiKey: 'AIzaSyDr-giMQQwsvzUicvuKa8DL7xQwEV4RRpc',
+    appId: '1:1067955332820:android:59b5799e80a3d1f3cebd41',
+    messagingSenderId: '1067955332820',
+    projectId: 'musclemax-ad6d4',
+    storageBucket: 'musclemax-ad6d4.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -82,4 +82,15 @@ class DefaultFirebaseOptions {
     iosClientId: 'YOUR_MACOS_CLIENT_ID',
     iosBundleId: 'com.example.musclemax',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBBphcgJSWl8-cFZPubVyJDFa5c4yRbBQE',
+    appId: '1:1067955332820:web:0db77e19c7b70c7dcebd41',
+    messagingSenderId: '1067955332820',
+    projectId: 'musclemax-ad6d4',
+    authDomain: 'musclemax-ad6d4.firebaseapp.com',
+    storageBucket: 'musclemax-ad6d4.firebasestorage.app',
+    measurementId: 'G-XSS8XEZD0X',
+  );
+
 }
