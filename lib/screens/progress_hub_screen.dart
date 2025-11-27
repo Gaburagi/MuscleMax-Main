@@ -71,7 +71,16 @@ class ProgressHubScreen extends StatelessWidget {
               ),
               onTap: () => context.go('/personal-records'),
             ),
-            // Add more progress features here if needed
+            const SizedBox(height: 16),
+            _ProgressCard(
+              title: 'Progress Photos',
+              subtitle: 'Visualize your transformation',
+              icon: Icons.photo_camera,
+              gradient: LinearGradient(
+                colors: [Colors.purple.shade600, Colors.purple.shade900],
+              ),
+              onTap: () => context.go('/progress-photos'),
+            ),
           ],
         ),
       ),
