@@ -9,6 +9,7 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/social_button.dart';
 import '../providers/user_provider.dart';
 import '../models/user_model.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -23,7 +24,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
 
   @override
@@ -62,6 +65,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
         if (mounted) {
           setState(() => _isLoading = false);
         }
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isGoogleLoading = true);
+    
+    try {
+      final userCredential = await _authService.signInWithGoogle();
+      
+      if (userCredential == null) {
+        // User canceled the sign-in
+        return;
+      }
+
+      final firebaseUser = userCredential.user!;
+      final userProvider = context.read<UserProvider>();
+      
+      // Create new user profile
+      final newUser = UserModel(
+        id: firebaseUser.uid,
+        email: firebaseUser.email!,
+        fullName: firebaseUser.displayName ?? '',
+        profilePhoto: firebaseUser.photoURL,
+      );
+      
+      await userProvider.saveUser(newUser);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Welcome, ${firebaseUser.displayName ?? 'User'}!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // Navigate to profile setup
+        context.go(AppRoutes.profileSetup);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
       }
     }
   }
@@ -201,7 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.g_mobiledata,
                     backgroundColor: Colors.white,
                     textColor: AppColors.textDarkGray,
-                    onPressed: () {},
+                    onPressed: _isGoogleLoading ? () {} : () => _signInWithGoogle(),
                   ),
                   const SizedBox(height: 12),
                   SocialButton(
