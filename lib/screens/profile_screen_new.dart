@@ -20,11 +20,24 @@ class ProfileScreenNew extends StatefulWidget {
 
 class _ProfileScreenNewState extends State<ProfileScreenNew> {
   final PageController _coverPageController = PageController();
+  final ScrollController _scrollController = ScrollController();
   int _currentCoverIndex = 0;
+  double _scrollOffset = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+    });
+  }
 
   @override
   void dispose() {
     _coverPageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -41,12 +54,15 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundDark,
-      body: CustomScrollView(
-        slivers: [
+      body: Stack(
+        children: [
+          CustomScrollView(
+            controller: _scrollController,
+            slivers: [
               // Cover Photos (Telegram-style swipeable)
               SliverAppBar(
             expandedHeight: 280,
-            pinned: true,
+            pinned: false,
             backgroundColor: AppColors.backgroundCard,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -155,14 +171,8 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Profile Picture - overlaps cover photo (Facebook style)
-                Transform.translate(
-                  offset: const Offset(0, -50),
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 20),
-                    child: _buildProfilePicture(user, theme),
-                  ),
-                ),
+                // Spacer for profile picture
+                const SizedBox(height: 70),
                 
                 // Name and info section
                 Padding(
@@ -388,6 +398,17 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
           ),
         ],
       ),
+          
+      // Profile Picture - positioned absolutely above all content, scrolls with content
+      Positioned(
+        top: 230 - _scrollOffset, // Moves with scroll
+        left: 20,
+        child: IgnorePointer(
+          child: _buildProfilePicture(user, theme),
+        ),
+      ),
+    ],
+  ),
       bottomNavigationBar: _buildBottomNav(context),
     );
   }
@@ -401,7 +422,7 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: frameColor != null
-            ? LinearGradient(colors: [frameColor, frameColor.withOpacity(0.6)])
+            ? LinearGradient(colors: [frameColor])
             : null,
         border: Border.all(
           color: frameColor ?? primaryColor,
@@ -409,7 +430,7 @@ class _ProfileScreenNewState extends State<ProfileScreenNew> {
         ),
         boxShadow: [
           BoxShadow(
-            color: (frameColor ?? primaryColor).withOpacity(0.5),
+            color: (frameColor ?? primaryColor),
             blurRadius: 20,
             spreadRadius: 2,
           ),

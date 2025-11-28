@@ -23,7 +23,6 @@ class ProgressReportsScreen extends StatefulWidget {
 
 class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
   String _selectedPeriod = 'week'; // week, month, 3months, 6months, year
-  final DateTime _selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {

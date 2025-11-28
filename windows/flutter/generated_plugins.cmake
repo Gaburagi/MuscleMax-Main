@@ -4,6 +4,8 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   file_selector_windows
+  firebase_auth
+  firebase_core
   printing
   share_plus
   url_launcher_windows

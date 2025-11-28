@@ -15,13 +15,11 @@ class WorkoutCalendarScreen extends StatefulWidget {
 
 class _WorkoutCalendarScreenState extends State<WorkoutCalendarScreen> {
   late DateTime _selectedMonth;
-  DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
     _selectedMonth = DateTime.now();
-    _selectedDate = DateTime.now();
   }
 
   void _previousMonth() {

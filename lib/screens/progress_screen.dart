@@ -16,7 +16,6 @@ class ProgressScreen extends StatefulWidget {
 
 class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final int _currentNavIndex = 2; // Progress tab in bottom nav
 
   @override
   void initState() {

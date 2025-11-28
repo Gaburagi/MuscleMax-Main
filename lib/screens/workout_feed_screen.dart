@@ -14,6 +14,7 @@ class WorkoutFeedScreen extends StatefulWidget {
 
 class _WorkoutFeedScreenState extends State<WorkoutFeedScreen> {
   final TextEditingController _commentController = TextEditingController();
+  // ignore: unused_field
   String? _commentingOnPostId;
 
   @override

@@ -8,6 +8,8 @@ import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/social_button.dart';
 import '../providers/user_provider.dart';
+import '../services/auth_service.dart';
+import '../models/user_model.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,8 +22,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -84,6 +88,75 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) {
           setState(() => _isLoading = false);
         }
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    print('Google Sign-In button pressed');
+    setState(() => _isGoogleLoading = true);
+    
+    try {
+      print('Attempting Google Sign-In...');
+      final userCredential = await _authService.signInWithGoogle();
+      print('User credential received: ${userCredential?.user?.email}');
+      
+      if (userCredential == null) {
+        // User canceled the sign-in
+        print('User canceled Google Sign-In');
+        return;
+      }
+
+      final firebaseUser = userCredential.user!;
+      final userProvider = context.read<UserProvider>();
+      
+      // Check if user exists in local storage
+      await userProvider.loadUser();
+      
+      if (mounted) {
+        if (userProvider.user == null || userProvider.user!.email != firebaseUser.email) {
+          // New user - create profile
+          final newUser = UserModel(
+            id: firebaseUser.uid,
+            email: firebaseUser.email!,
+            fullName: firebaseUser.displayName ?? '',
+            profilePhoto: firebaseUser.photoURL,
+          );
+          
+          await userProvider.saveUser(newUser);
+          
+          // Navigate to profile setup
+          context.go(AppRoutes.profileSetup);
+        } else {
+          // Existing user
+          if (!userProvider.isProfileComplete) {
+            context.go(AppRoutes.profileSetup);
+          } else {
+            context.go(AppRoutes.home);
+          }
+        }
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Welcome, ${firebaseUser.displayName ?? 'User'}!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google Sign-In failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isGoogleLoading = false);
       }
     }
   }
@@ -212,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: Icons.g_mobiledata,
                     backgroundColor: Colors.white,
                     textColor: AppColors.textDarkGray,
-                    onPressed: () {},
+                    onPressed: _isGoogleLoading ? () {} : () => _signInWithGoogle(),
                   ),
                   const SizedBox(height: 12),
                   SocialButton(
