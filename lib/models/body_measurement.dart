@@ -148,6 +148,8 @@ class PersonalRecord {
   final int reps;
   final DateTime achievedDate;
   final String recordType; // 'max_weight', 'max_reps', 'max_volume'
+  final String? mediaProofPath; // Path to photo or video proof
+  final String? mediaProofType; // 'photo' or 'video'
 
   PersonalRecord({
     required this.id,
@@ -157,6 +159,8 @@ class PersonalRecord {
     required this.reps,
     required this.achievedDate,
     required this.recordType,
+    this.mediaProofPath,
+    this.mediaProofType,
   });
 
   double get volume => weight * reps;
@@ -169,6 +173,8 @@ class PersonalRecord {
     'reps': reps,
     'achievedDate': achievedDate.toIso8601String(),
     'recordType': recordType,
+    'mediaProofPath': mediaProofPath,
+    'mediaProofType': mediaProofType,
   };
 
   factory PersonalRecord.fromJson(Map<String, dynamic> json) {
@@ -180,6 +186,8 @@ class PersonalRecord {
       reps: json['reps'] ?? 0,
       achievedDate: DateTime.parse(json['achievedDate']),
       recordType: json['recordType'],
+      mediaProofPath: json['mediaProofPath'],
+      mediaProofType: json['mediaProofType'],
     );
   }
 }

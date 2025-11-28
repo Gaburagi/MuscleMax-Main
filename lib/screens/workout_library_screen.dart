@@ -191,6 +191,32 @@ class WorkoutLibraryScreen extends StatelessWidget {
                       ),
                       onPressed: () => provider.toggleFavorite(workout.id),
                     ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.white),
+                      tooltip: 'Delete workout',
+                      onPressed: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Delete Workout'),
+                            content: const Text('Are you sure you want to delete this workout? This action cannot be undone.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          provider.deleteCustomWorkout(workout.id);
+                        }
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),

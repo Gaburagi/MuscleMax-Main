@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/body_measurement_provider.dart';
 import '../providers/workout_provider.dart';
@@ -167,6 +168,8 @@ class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
             _buildStatRow('Total Exercises', '${stats['totalExercises']}'),
             _buildStatRow('Avg. Workout Time', stats['avgDuration']),
             _buildStatRow('Most Active Day', stats['mostActiveDay']),
+            const SizedBox(height: 16),
+            _buildWorkoutFrequencyChart(workoutProvider, startDate, endDate),
           ],
         ),
         const SizedBox(height: 16),
@@ -185,6 +188,10 @@ class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
               ),
           ],
         ),
+        const SizedBox(height: 16),
+
+        // Workout Type Distribution
+        _buildWorkoutTypePieChart(workoutProvider, startDate, endDate),
         const SizedBox(height: 16),
 
         // Body Measurements
@@ -228,6 +235,310 @@ class _ProgressReportsScreenState extends State<ProgressReportsScreen> {
           children: [
             _buildStatRow('Photos Added', '${stats['photosAdded']}'),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWorkoutFrequencyChart(WorkoutProvider workoutProvider, DateTime startDate, DateTime endDate) {
+    final workoutHistory = workoutProvider.workoutHistory
+        .where((w) => w.endTime != null && 
+              w.endTime!.isAfter(startDate) && 
+              w.endTime!.isBefore(endDate))
+        .toList();
+
+    if (workoutHistory.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Count workouts by day of week
+    final dayCount = <String, int>{
+      'Mon': 0,
+      'Tue': 0,
+      'Wed': 0,
+      'Thu': 0,
+      'Fri': 0,
+      'Sat': 0,
+      'Sun': 0,
+    };
+
+    for (var workout in workoutHistory) {
+      if (workout.endTime != null) {
+        final day = DateFormat('E').format(workout.endTime!);
+        dayCount[day] = (dayCount[day] ?? 0) + 1;
+      }
+    }
+
+    final maxCount = dayCount.values.reduce((a, b) => a > b ? a : b);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Weekly Activity',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 200,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundDark,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: maxCount.toDouble() + 1,
+              barTouchData: BarTouchData(enabled: false),
+              titlesData: FlTitlesData(
+                show: true,
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                      if (value.toInt() >= 0 && value.toInt() < days.length) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            days[value.toInt()],
+                            style: const TextStyle(
+                              color: AppColors.textGray,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      }
+                      return const Text('');
+                    },
+                  ),
+                ),
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 30,
+                    getTitlesWidget: (value, meta) {
+                      if (value == meta.max || value == meta.min) return const Text('');
+                      return Text(
+                        value.toInt().toString(),
+                        style: const TextStyle(
+                          color: AppColors.textGray,
+                          fontSize: 10,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              borderData: FlBorderData(show: false),
+              gridData: FlGridData(
+                show: true,
+                drawVerticalLine: false,
+                horizontalInterval: 1,
+                getDrawingHorizontalLine: (value) {
+                  return FlLine(
+                    color: Colors.white.withOpacity(0.1),
+                    strokeWidth: 1,
+                  );
+                },
+              ),
+              barGroups: List.generate(7, (index) {
+                final day = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][index];
+                final count = dayCount[day] ?? 0;
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: count.toDouble(),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primaryRed,
+                          AppColors.primaryRed.withOpacity(0.7),
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                      width: 20,
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildWorkoutTypePieChart(WorkoutProvider workoutProvider, DateTime startDate, DateTime endDate) {
+    final workoutHistory = workoutProvider.workoutHistory
+        .where((w) => w.endTime != null && 
+              w.endTime!.isAfter(startDate) && 
+              w.endTime!.isBefore(endDate))
+        .toList();
+
+    if (workoutHistory.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final total = workoutHistory.length;
+    
+    // Categorize by duration
+    final shortWorkouts = workoutHistory.where((w) {
+      final dur = w.duration;
+      return dur != null && dur.inMinutes < 30;
+    }).length;
+
+    final mediumWorkouts = workoutHistory.where((w) {
+      final dur = w.duration;
+      return dur != null && dur.inMinutes >= 30 && dur.inMinutes < 60;
+    }).length;
+
+    final longWorkouts = workoutHistory.where((w) {
+      final dur = w.duration;
+      return dur != null && dur.inMinutes >= 60;
+    }).length;
+
+    final colors = [
+      Colors.green,
+      AppColors.primaryRed,
+      Colors.purple,
+    ];
+
+    final sections = [
+      if (shortWorkouts > 0)
+        PieChartSectionData(
+          value: shortWorkouts.toDouble(),
+          title: '${(shortWorkouts / total * 100).toInt()}%',
+          color: colors[0],
+          radius: 80,
+          titleStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      if (mediumWorkouts > 0)
+        PieChartSectionData(
+          value: mediumWorkouts.toDouble(),
+          title: '${(mediumWorkouts / total * 100).toInt()}%',
+          color: colors[1],
+          radius: 80,
+          titleStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      if (longWorkouts > 0)
+        PieChartSectionData(
+          value: longWorkouts.toDouble(),
+          title: '${(longWorkouts / total * 100).toInt()}%',
+          color: colors[2],
+          radius: 80,
+          titleStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+    ];
+
+    if (sections.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final labels = [
+      if (shortWorkouts > 0) {'name': 'Quick (<30 min)', 'count': shortWorkouts, 'color': colors[0]},
+      if (mediumWorkouts > 0) {'name': 'Medium (30-60 min)', 'count': mediumWorkouts, 'color': colors[1]},
+      if (longWorkouts > 0) {'name': 'Extended (60+ min)', 'count': longWorkouts, 'color': colors[2]},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Workout Duration Distribution',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          height: 220,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundDark,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: PieChart(
+                  PieChartData(
+                    sections: sections,
+                    sectionsSpace: 2,
+                    centerSpaceRadius: 40,
+                    startDegreeOffset: -90,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: labels.map((label) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 16,
+                          height: 16,
+                          decoration: BoxDecoration(
+                            color: label['color'] as Color,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              label['name'] as String,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '${label['count']} workouts',
+                              style: const TextStyle(
+                                color: AppColors.textGray,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
         ),
       ],
     );

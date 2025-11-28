@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/gamification_model.dart';
+import 'notification_provider.dart';
 
 // Result class for workout completion with level-up info
 class WorkoutCompletionResult {
@@ -22,6 +23,8 @@ class WorkoutCompletionResult {
 }
 
 class GamificationProvider with ChangeNotifier {
+  NotificationProvider? _notificationProvider;
+  
   UserLevel _userLevel = UserLevel(
     level: 1,
     currentXP: 0,
@@ -33,6 +36,11 @@ class GamificationProvider with ChangeNotifier {
   WorkoutStreak _streak = WorkoutStreak();
   List<DailyChallenge> _dailyChallenges = [];
   List<XPEvent> _xpHistory = [];
+  
+  // Set notification provider for triggering notifications
+  void setNotificationProvider(NotificationProvider provider) {
+    _notificationProvider = provider;
+  }
 
   UserLevel get userLevel => _userLevel;
   List<Achievement> get achievements => _achievements;
@@ -565,6 +573,9 @@ class GamificationProvider with ChangeNotifier {
         title: UserLevel.titleForLevel(_userLevel.level + 1),
       );
       leveledUp = true;
+      
+      // Trigger level up notification
+      _notificationProvider?.triggerLevelUp(_userLevel.level, _userLevel.title);
     }
 
     await _saveUserLevel();
@@ -631,6 +642,11 @@ class GamificationProvider with ChangeNotifier {
     await _checkAchievement('month_streak', _streak.currentStreak);
     await _checkAchievement('hundred_day_streak', _streak.currentStreak);
     
+    // Trigger streak milestone notifications
+    if (_streak.currentStreak % 7 == 0 || _streak.currentStreak == 30 || _streak.currentStreak == 100) {
+      _notificationProvider?.triggerStreakMilestone(_streak.currentStreak);
+    }
+    
     notifyListeners();
   }
 
@@ -655,6 +671,9 @@ class GamificationProvider with ChangeNotifier {
           description: _achievements[index].name,
         );
         unlockedAchievements.add(_achievements[index]);
+        
+        // Trigger achievement notification
+        _notificationProvider?.triggerAchievementUnlocked(_achievements[index].name);
       }
 
       await _saveAchievements();
@@ -670,6 +689,9 @@ class GamificationProvider with ChangeNotifier {
     
     // Award XP and check for level up
     final leveledUp = await awardXP(20, 'workout_complete', description: 'Completed a workout');
+    
+    // Trigger workout completion notification
+    _notificationProvider?.triggerWorkoutReminder('Great job completing your workout!');
     
     // Update streak
     await recordWorkout();

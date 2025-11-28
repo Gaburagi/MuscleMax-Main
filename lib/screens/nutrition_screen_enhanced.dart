@@ -59,7 +59,7 @@ class _NutritionScreenEnhancedState extends State<NutritionScreenEnhanced> with 
 
           return CustomScrollView(
             slivers: [
-              // App Bar with gradient
+              // App Bar with image background
               SliverAppBar(
                 expandedHeight: 200,
                 pinned: true,
@@ -70,11 +70,18 @@ class _NutritionScreenEnhancedState extends State<NutritionScreenEnhanced> with 
                 ),
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
+                      image: const DecorationImage(
+                        image: AssetImage('assets/images/nutrition_tab_background.png'),
+                        fit: BoxFit.cover,
+                      ),
                       gradient: LinearGradient(
-                        colors: [AppColors.primaryRed, Color(0xFFFF6B9D)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.black.withOpacity(0.3),
+                          Colors.black.withOpacity(0.5),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
                     ),
                     child: SafeArea(
@@ -87,7 +94,7 @@ class _NutritionScreenEnhancedState extends State<NutritionScreenEnhanced> with 
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text(
+                                Text(
                                   'NUTRITION',
                                   style: TextStyle(
                                     color: Colors.white,
@@ -95,10 +102,27 @@ class _NutritionScreenEnhancedState extends State<NutritionScreenEnhanced> with 
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'BebasNeue',
                                     letterSpacing: 2,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black.withOpacity(0.8),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                      Shadow(
+                                        color: AppColors.primaryRed.withOpacity(0.5),
+                                        blurRadius: 30,
+                                        offset: const Offset(0, 0),
+                                      ),
+                                    ],
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.history, color: Colors.white),
+                                  icon: const Icon(Icons.history, color: Colors.white, shadows: [
+                                    Shadow(
+                                      color: Colors.black,
+                                      blurRadius: 8,
+                                    ),
+                                  ]),
                                   onPressed: () {
                                     Navigator.push(
                                       context,
@@ -113,9 +137,16 @@ class _NutritionScreenEnhancedState extends State<NutritionScreenEnhanced> with 
                             const SizedBox(height: 8),
                             Text(
                               DateFormat('EEEE, MMMM d').format(nutrition.date),
-                              style: const TextStyle(
-                                color: Colors.white70,
+                              style: TextStyle(
+                                color: Colors.white,
                                 fontSize: 16,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.8),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
                               ),
                             ),
                           ],

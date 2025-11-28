@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/app_colors.dart';
 import '../utils/routes.dart';
+import '../widgets/bottom_navigation.dart';
 
 class ProgressHubScreen extends StatelessWidget {
   const ProgressHubScreen({super.key});
@@ -32,83 +33,13 @@ class ProgressHubScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'AI Progress Features',
+              'Progress & Achievements',
               style: TextStyle(
                 color: AppColors.textGray,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
               ),
-            ),
-            const SizedBox(height: 16),
-            _ProgressCard(
-              title: 'Adaptive Difficulty',
-              subtitle: 'AI-powered workout difficulty adjustment',
-              icon: Icons.trending_up,
-              gradient: LinearGradient(
-                colors: [Colors.orange.shade600, Colors.deepOrange.shade800],
-              ),
-              onTap: () => context.go('/adaptive-difficulty'),
-            ),
-            const SizedBox(height: 16),
-            _ProgressCard(
-              title: 'Recovery & Readiness',
-              subtitle: 'Track your recovery status',
-              icon: Icons.healing,
-              gradient: LinearGradient(
-                colors: [Colors.green.shade600, Colors.green.shade900],
-              ),
-              onTap: () => context.go('/recovery-dashboard'),
-            ),
-            const SizedBox(height: 16),
-            _ProgressCard(
-              title: 'Goal Predictions',
-              subtitle: 'AI-powered goal achievement forecasts',
-              icon: Icons.analytics,
-              gradient: LinearGradient(
-                colors: [Colors.purple.shade600, Colors.purple.shade900],
-              ),
-              onTap: () => context.go(AppRoutes.goals),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              'Progress Tracking',
-              style: TextStyle(
-                color: AppColors.textGray,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _ProgressCard(
-              title: 'Body Measurements',
-              subtitle: 'Track weight, muscle mass, and body fat',
-              icon: Icons.straighten,
-              gradient: LinearGradient(
-                colors: [Colors.blue.shade600, Colors.blue.shade900],
-              ),
-              onTap: () => context.go('/body-measurements'),
-            ),
-            const SizedBox(height: 16),
-            _ProgressCard(
-              title: 'Progress Photos',
-              subtitle: 'Visual transformation timeline',
-              icon: Icons.photo_camera,
-              gradient: LinearGradient(
-                colors: [Colors.teal.shade600, Colors.teal.shade900],
-              ),
-              onTap: () => context.go('/progress-photos'),
-            ),
-            const SizedBox(height: 16),
-            _ProgressCard(
-              title: 'Personal Records',
-              subtitle: 'Track your strength PRs',
-              icon: Icons.emoji_events,
-              gradient: LinearGradient(
-                colors: [Colors.amber.shade600, Colors.amber.shade900],
-              ),
-              onTap: () => context.go('/personal-records'),
             ),
             const SizedBox(height: 16),
             _ProgressCard(
@@ -130,9 +61,30 @@ class ProgressHubScreen extends StatelessWidget {
               ),
               onTap: () => context.go(AppRoutes.achievements),
             ),
+            const SizedBox(height: 16),
+            _ProgressCard(
+              title: 'Personal Records',
+              subtitle: 'Track your strength PRs',
+              icon: Icons.emoji_events,
+              gradient: LinearGradient(
+                colors: [Colors.amber.shade600, Colors.amber.shade900],
+              ),
+              onTap: () => context.go('/personal-records'),
+            ),
+            const SizedBox(height: 16),
+            _ProgressCard(
+              title: 'Progress Photos',
+              subtitle: 'Visualize your transformation',
+              icon: Icons.photo_camera,
+              gradient: LinearGradient(
+                colors: [Colors.purple.shade600, Colors.purple.shade900],
+              ),
+              onTap: () => context.go('/progress-photos'),
+            ),
           ],
         ),
       ),
+      bottomNavigationBar: const BottomNavigation(currentIndex: 2),
     );
   }
 }

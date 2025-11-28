@@ -157,6 +157,13 @@ class AppRoutes {
         },
       ),
       GoRoute(
+        path: '/workout-detail/:id',
+        builder: (context, state) {
+          final workoutId = state.pathParameters['id'] ?? '';
+          return WorkoutDetailScreen(workoutId: workoutId);
+        },
+      ),
+      GoRoute(
         path: activeWorkout,
         builder: (context, state) {
           final workoutId = state.uri.queryParameters['workoutId'] ?? '';

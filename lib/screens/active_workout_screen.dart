@@ -11,6 +11,7 @@ import '../models/ai_models.dart';
 import '../utils/app_colors.dart';
 import 'workout_share_screen.dart';
 import 'package:go_router/go_router.dart';
+import '../widgets/exercise_video_player.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   final String workoutId;
@@ -489,7 +490,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
-          // Exercise Image Placeholder
+          // Exercise Video Player
           Container(
             width: double.infinity,
             height: 250,
@@ -497,24 +498,31 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
               color: AppColors.backgroundCard,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.fitness_center,
-                  size: 80,
-                  color: AppColors.primaryRed.withOpacity(0.3),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Exercise Demo',
-                  style: TextStyle(
-                    color: AppColors.textGray.withOpacity(0.5),
-                    fontSize: 16,
+            clipBehavior: Clip.antiAlias,
+            child: exercise.videoUrl != null && exercise.videoUrl!.isNotEmpty
+                ? ExerciseVideoPlayer(
+                    videoUrl: exercise.videoUrl!,
+                    autoPlay: true,
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.fitness_center,
+                        size: 80,
+                        color: AppColors.primaryRed.withOpacity(0.3),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        exercise.name,
+                        style: TextStyle(
+                          color: AppColors.textGray.withOpacity(0.5),
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
           const SizedBox(height: 32),
 

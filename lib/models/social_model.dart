@@ -175,40 +175,45 @@ class WorkoutPost {
   final String userId;
   final String userName;
   final String? avatarUrl;
-  final String workoutName;
-  final int durationMinutes;
-  final int exercisesCompleted;
+  final String? workoutName; // Optional for general posts
+  final int? durationMinutes; // Optional for general posts
+  final int? exercisesCompleted; // Optional for general posts
   final int? caloriesBurned;
   final List<String> personalRecords; // PR descriptions
-  final int xpGained;
+  final int? xpGained; // Optional for general posts
   final List<String> achievements; // Achievement names unlocked
   final DateTime timestamp;
   final List<String> likedBy; // User IDs who liked
   final List<WorkoutComment> comments;
-  final String? note; // Optional user note
+  final String? note; // Post text content (can be used for general posts)
   final List<String> imageUrls; // Attached images
+  final List<String> videoUrls; // Attached videos
+  final String postType; // 'workout', 'general', 'achievement', 'pr'
 
   WorkoutPost({
     required this.id,
     required this.userId,
     required this.userName,
     this.avatarUrl,
-    required this.workoutName,
-    required this.durationMinutes,
-    required this.exercisesCompleted,
+    this.workoutName,
+    this.durationMinutes,
+    this.exercisesCompleted,
     this.caloriesBurned,
-    required this.personalRecords,
-    required this.xpGained,
-    required this.achievements,
+    this.personalRecords = const [],
+    this.xpGained,
+    this.achievements = const [],
     required this.timestamp,
-    required this.likedBy,
-    required this.comments,
+    this.likedBy = const [],
+    this.comments = const [],
     this.note,
     this.imageUrls = const [],
+    this.videoUrls = const [],
+    this.postType = 'general',
   });
 
   int get likeCount => likedBy.length;
   int get commentCount => comments.length;
+  bool get isWorkoutPost => postType == 'workout';
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -227,6 +232,8 @@ class WorkoutPost {
     'comments': comments.map((c) => c.toJson()).toList(),
     'note': note,
     'imageUrls': imageUrls,
+    'videoUrls': videoUrls,
+    'postType': postType,
   };
 
   factory WorkoutPost.fromJson(Map<String, dynamic> json) {
@@ -249,6 +256,8 @@ class WorkoutPost {
           .toList() ?? [],
       note: json['note'],
       imageUrls: List<String>.from(json['imageUrls'] ?? []),
+      videoUrls: List<String>.from(json['videoUrls'] ?? []),
+      postType: json['postType'] ?? 'general',
     );
   }
 
@@ -273,6 +282,8 @@ class WorkoutPost {
       comments: comments ?? this.comments,
       note: note,
       imageUrls: imageUrls,
+      videoUrls: videoUrls,
+      postType: postType,
     );
   }
 }

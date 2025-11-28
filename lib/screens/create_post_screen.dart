@@ -23,6 +23,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   
   bool _isPosting = false;
   List<XFile> _selectedImages = [];
+  List<XFile> _selectedVideos = [];
+  String _postType = 'general'; // 'general', 'workout'
 
   @override
   void dispose() {
@@ -64,14 +66,57 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 
+  Future<void> _pickVideo() async {
+    try {
+      final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+      
+      if (video != null) {
+        setState(() {
+          _selectedVideos.add(video);
+          // Limit to 1 video max
+          if (_selectedVideos.length > 1) {
+            _selectedVideos = _selectedVideos.take(1).toList();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error picking video: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _removeImage(int index) {
     setState(() {
       _selectedImages.removeAt(index);
     });
   }
 
+  void _removeVideo(int index) {
+    setState(() {
+      _selectedVideos.removeAt(index);
+    });
+  }
+
   Future<void> _createPost() async {
-    if (_workoutNameController.text.trim().isEmpty) {
+    // For general posts, content is required
+    if (_postType == 'general' && _noteController.text.trim().isEmpty && _selectedImages.isEmpty && _selectedVideos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please add some content to your post'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // For workout posts, workout name is required
+    if (_postType == 'workout' && _workoutNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Please enter a workout name'),
@@ -87,22 +132,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     
     // Convert XFile paths to strings (in production, upload to server first)
     final imagePaths = _selectedImages.map((img) => img.path).toList();
+    final videoPaths = _selectedVideos.map((vid) => vid.path).toList();
     
     await socialProvider.postWorkout(
-      workoutName: _workoutNameController.text.trim(),
-      durationMinutes: int.tryParse(_durationController.text) ?? 0,
-      exercisesCompleted: int.tryParse(_exercisesController.text) ?? 0,
-      caloriesBurned: int.tryParse(_caloriesController.text),
-      xpGained: int.tryParse(_xpController.text) ?? 0,
+      workoutName: _postType == 'workout' ? _workoutNameController.text.trim() : null,
+      durationMinutes: _postType == 'workout' ? (int.tryParse(_durationController.text) ?? 0) : null,
+      exercisesCompleted: _postType == 'workout' ? (int.tryParse(_exercisesController.text) ?? 0) : null,
+      caloriesBurned: _postType == 'workout' ? int.tryParse(_caloriesController.text) : null,
+      xpGained: _postType == 'workout' ? (int.tryParse(_xpController.text) ?? 0) : null,
       note: _noteController.text.trim().isNotEmpty ? _noteController.text.trim() : null,
       imageUrls: imagePaths,
+      videoUrls: videoPaths,
+      postType: _postType,
     );
 
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Workout posted successfully!'),
+          content: Text('Post shared successfully!'),
           backgroundColor: AppColors.primaryRed,
         ),
       );
@@ -158,9 +206,42 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Workout Name (Required)
+            // Post Type Selector
             const Text(
-              'WORKOUT NAME *',
+              'POST TYPE',
+              style: TextStyle(
+                color: AppColors.primaryRed,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildPostTypeButton(
+                    label: 'General',
+                    icon: Icons.chat_bubble,
+                    type: 'general',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildPostTypeButton(
+                    label: 'Workout',
+                    icon: Icons.fitness_center,
+                    type: 'workout',
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // Content/Note (Always visible)
+            const Text(
+              'WHAT\'S ON YOUR MIND?',
               style: TextStyle(
                 color: AppColors.primaryRed,
                 fontSize: 12,
@@ -170,10 +251,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
             const SizedBox(height: 8),
             TextField(
-              controller: _workoutNameController,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              controller: _noteController,
+              maxLines: 5,
+              style: const TextStyle(color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
-                hintText: 'e.g., Upper Body Strength',
+                hintText: 'Share your thoughts, progress, or motivation...',
                 hintStyle: const TextStyle(color: AppColors.textGray),
                 filled: true,
                 fillColor: AppColors.backgroundCard,
@@ -181,18 +263,48 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
+                contentPadding: const EdgeInsets.all(16),
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // Image Picker
+            // Workout Name (Only for workout posts)
+            if (_postType == 'workout') ...[
+              const Text(
+                'WORKOUT NAME *',
+                style: TextStyle(
+                  color: AppColors.primaryRed,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _workoutNameController,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'e.g., Upper Body Strength',
+                  hintStyle: const TextStyle(color: AppColors.textGray),
+                  filled: true,
+                  fillColor: AppColors.backgroundCard,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Media Picker
             const Text(
-              'IMAGES (OPTIONAL)',
+              'PHOTOS & VIDEOS (OPTIONAL)',
               style: TextStyle(
                 color: AppColors.primaryRed,
                 fontSize: 12,
@@ -206,20 +318,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: [
-                  // Add image button
+                  // Add photo button
                   InkWell(
-                    onTap: _selectedImages.length < 4 ? _pickImages : null,
+                    onTap: _selectedImages.length < 4 && _selectedVideos.isEmpty ? _pickImages : null,
                     child: Container(
                       width: 100,
+                      margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         color: AppColors.backgroundCard,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: _selectedImages.length < 4
-                              ? AppColors.primaryRed.withOpacity(0.5)
+                          color: _selectedImages.length < 4 && _selectedVideos.isEmpty
+                              ? Colors.blue.withOpacity(0.5)
                               : AppColors.textGray.withOpacity(0.3),
                           width: 2,
-                          style: BorderStyle.solid,
                         ),
                       ),
                       child: Column(
@@ -227,19 +339,57 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         children: [
                           Icon(
                             Icons.add_photo_alternate,
-                            color: _selectedImages.length < 4
-                                ? AppColors.primaryRed
+                            color: _selectedImages.length < 4 && _selectedVideos.isEmpty
+                                ? Colors.blue
                                 : AppColors.textGray,
                             size: 32,
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _selectedImages.length < 4
-                                ? 'Add Photo'
-                                : 'Max 4',
+                            'Photo',
                             style: TextStyle(
-                              color: _selectedImages.length < 4
-                                  ? AppColors.primaryRed
+                              color: _selectedImages.length < 4 && _selectedVideos.isEmpty
+                                  ? Colors.blue
+                                  : AppColors.textGray,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Add video button
+                  InkWell(
+                    onTap: _selectedVideos.isEmpty && _selectedImages.isEmpty ? _pickVideo : null,
+                    child: Container(
+                      width: 100,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _selectedVideos.isEmpty && _selectedImages.isEmpty
+                              ? Colors.purple.withOpacity(0.5)
+                              : AppColors.textGray.withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.videocam,
+                            color: _selectedVideos.isEmpty && _selectedImages.isEmpty
+                                ? Colors.purple
+                                : AppColors.textGray,
+                            size: 32,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Video',
+                            style: TextStyle(
+                              color: _selectedVideos.isEmpty && _selectedImages.isEmpty
+                                  ? Colors.purple
                                   : AppColors.textGray,
                               fontSize: 11,
                             ),
@@ -254,7 +404,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     final image = entry.value;
                     return Container(
                       width: 100,
-                      margin: const EdgeInsets.only(left: 8),
+                      margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         image: DecorationImage(
@@ -287,53 +437,64 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       ),
                     );
                   }),
+                  // Selected videos
+                  ..._selectedVideos.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final video = entry.value;
+                    return Container(
+                      width: 100,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.backgroundCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.purple, width: 2),
+                      ),
+                      child: Stack(
+                        children: [
+                          const Center(
+                            child: Icon(Icons.play_circle_filled, color: Colors.purple, size: 40),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: InkWell(
+                              onTap: () => _removeVideo(index),
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // Note/Caption
-            const Text(
-              'NOTE (OPTIONAL)',
-              style: TextStyle(
-                color: AppColors.primaryRed,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _noteController,
-              maxLines: 4,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
-              decoration: InputDecoration(
-                hintText: 'Share your thoughts about this workout...',
-                hintStyle: const TextStyle(color: AppColors.textGray),
-                filled: true,
-                fillColor: AppColors.backgroundCard,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+            // Workout Stats (Only for workout posts)
+            if (_postType == 'workout') ...[
+              const Text(
+                'WORKOUT DETAILS (OPTIONAL)',
+                style: TextStyle(
+                  color: AppColors.primaryRed,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
                 ),
-                contentPadding: const EdgeInsets.all(16),
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Workout Stats
-            const Text(
-              'WORKOUT DETAILS',
-              style: TextStyle(
-                color: AppColors.primaryRed,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-              ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
             Row(
               children: [
@@ -377,7 +538,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ],
             ),
 
-            const SizedBox(height: 32),
+              const SizedBox(height: 32),
+            ],
 
             // Info message
             Container(
@@ -408,6 +570,43 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostTypeButton({
+    required String label,
+    required IconData icon,
+    required String type,
+  }) {
+    final isSelected = _postType == type;
+    return InkWell(
+      onTap: () => setState(() => _postType = type),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryRed.withOpacity(0.2) : AppColors.backgroundCard,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryRed : AppColors.textGray.withOpacity(0.3),
+            width: 2,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: isSelected ? AppColors.primaryRed : Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppColors.primaryRed : Colors.white,
+                fontSize: 15,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ],

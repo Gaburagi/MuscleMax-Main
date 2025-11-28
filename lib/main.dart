@@ -16,6 +16,7 @@ import 'providers/body_measurement_provider.dart';
 import 'providers/gamification_provider.dart';
 import 'providers/social_provider.dart';
 import 'providers/ai_workout_provider.dart';
+import 'providers/notification_provider.dart';
 
 void main() {
   runApp(const MuscleMaxApp());
@@ -95,7 +96,14 @@ class _MuscleMaxAppState extends State<MuscleMaxApp> {
             ChangeNotifierProvider(create: (_) => CommunityProvider()),
             ChangeNotifierProvider(create: (_) => FriendsProvider()),
             ChangeNotifierProvider(create: (_) => BodyMeasurementProvider()..loadData()),
-            ChangeNotifierProvider(create: (_) => GamificationProvider()..loadData()),
+            ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProxyProvider<NotificationProvider, GamificationProvider>(
+          create: (context) => GamificationProvider()..loadData(),
+          update: (context, notificationProvider, gamificationProvider) {
+            gamificationProvider!.setNotificationProvider(notificationProvider);
+            return gamificationProvider;
+          },
+        ),
             ChangeNotifierProvider(create: (_) => SocialProvider()..loadData()),
             ChangeNotifierProvider(create: (_) => AIWorkoutProvider()),
             ChangeNotifierProxyProvider<CommunityProvider, CustomWorkoutProvider>(

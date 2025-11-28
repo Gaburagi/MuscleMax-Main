@@ -133,8 +133,8 @@ class WorkoutSummaryScreen extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Navigate back to home
-                      context.go(AppRoutes.home);
+                      // Navigate back to training hub
+                      context.go(AppRoutes.training);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryRed,
@@ -158,8 +158,7 @@ class WorkoutSummaryScreen extends StatelessWidget {
                 // View Progress Button
                 TextButton(
                   onPressed: () {
-                    // TODO: Navigate to progress screen when implemented
-                    context.go(AppRoutes.home);
+                    context.go(AppRoutes.progress);
                   },
                   child: const Text(
                     'View Progress',

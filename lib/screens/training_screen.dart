@@ -13,19 +13,10 @@ class TrainingScreen extends StatefulWidget {
   State<TrainingScreen> createState() => _TrainingScreenState();
 }
 
-class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
+class _TrainingScreenState extends State<TrainingScreen> {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   @override
@@ -34,84 +25,204 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: AppColors.backgroundGradient,
         ),
         child: SafeArea(
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: AppColors.textWhite),
-                      onPressed: () => context.go(AppRoutes.home),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'TRAINING',
-                        style: Theme.of(context).textTheme.displayMedium,
-                        textAlign: TextAlign.center,
+              // Header with background image
+              Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/training_tab_background.png'),
+                    fit: BoxFit.cover,
+                  ),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.3),
+                      Colors.black.withOpacity(0.6),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back, color: Colors.white, shadows: [
+                              Shadow(color: Colors.black, blurRadius: 8),
+                            ]),
+                            onPressed: () => context.go(AppRoutes.home),
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.library_books, color: Colors.white, shadows: [
+                                  Shadow(color: Colors.black, blurRadius: 8),
+                                ]),
+                                onPressed: () => context.push(AppRoutes.workoutLibrary),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.history, color: Colors.white, shadows: [
+                                  Shadow(color: Colors.black, blurRadius: 8),
+                                ]),
+                                onPressed: () => context.push(AppRoutes.workoutHistory),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.library_books, color: AppColors.primaryRed),
-                      onPressed: () => context.push(AppRoutes.workoutLibrary),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.history, color: AppColors.primaryRed),
-                      onPressed: () => context.push(AppRoutes.workoutHistory),
-                    ),
-                  ],
+                      const Spacer(),
+                      Text(
+                        'TRAINING',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'BebasNeue',
+                          letterSpacing: 2,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 20,
+                              offset: const Offset(0, 2),
+                            ),
+                            Shadow(
+                              color: AppColors.primaryRed.withOpacity(0.5),
+                              blurRadius: 30,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Choose your workout program',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 10,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               
-              // Quick access to custom workouts
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: TextButton.icon(
-                  onPressed: () => context.push(AppRoutes.workoutLibrary),
-                  style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFF333333),
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  icon: const Icon(Icons.add_circle_outline, color: AppColors.primaryRed, size: 20),
-                  label: const Text(
-                    'MY CUSTOM WORKOUTS',
-                    style: TextStyle(
-                      fontFamily: 'DM Sans',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              
-              TabBar(
-                controller: _tabController,
-                indicatorColor: AppColors.primaryRed,
-                labelColor: AppColors.textWhite,
-                unselectedLabelColor: AppColors.textGray,
-                tabs: const [
-                  Tab(text: 'Beginner'),
-                  Tab(text: 'Intermediate'),
-                  Tab(text: 'Advanced'),
-                ],
-              ),
-              
+              // Content
               Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _WorkoutList(workoutProvider.getWorkoutsByDifficulty('Beginner')),
-                    _WorkoutList(workoutProvider.getWorkoutsByDifficulty('Intermediate')),
-                    _WorkoutList(workoutProvider.getWorkoutsByDifficulty('Advanced')),
-                  ],
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Quick Actions Grid
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: 1.2,
+                        children: [
+                          _QuickActionCard(
+                            title: 'Custom\nWorkouts',
+                            icon: Icons.fitness_center,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFFF3B3B), Color(0xFFFF6B6B)],
+                            ),
+                            onTap: () => context.push(AppRoutes.workoutLibrary),
+                          ),
+                          _QuickActionCard(
+                            title: 'Workout\nHistory',
+                            icon: Icons.history,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF9333EA), Color(0xFFC084FC)],
+                            ),
+                            onTap: () => context.push(AppRoutes.workoutHistory),
+                          ),
+                          _QuickActionCard(
+                            title: 'AI Workout\nGenerator',
+                            icon: Icons.auto_awesome,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+                            ),
+                            onTap: () => context.push('/ai-workout'),
+                          ),
+                          _QuickActionCard(
+                            title: 'Workout\nPlanner',
+                            icon: Icons.calendar_today,
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF059669), Color(0xFF34D399)],
+                            ),
+                            onTap: () {
+                              // TODO: Add workout planner route
+                            },
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Program Categories
+                      const Text(
+                        'WORKOUT PROGRAMS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'BebasNeue',
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      _ProgramCard(
+                        title: 'Beginner Programs',
+                        subtitle: 'Perfect for starting your fitness journey',
+                        icon: Icons.directions_walk,
+                        color: const Color(0xFF059669),
+                        workoutCount: workoutProvider.getWorkoutsByDifficulty('Beginner').length,
+                        onTap: () => context.push('${AppRoutes.training}/beginner'),
+                      ),
+                      const SizedBox(height: 12),
+                      _ProgramCard(
+                        title: 'Intermediate Programs',
+                        subtitle: 'Take your training to the next level',
+                        icon: Icons.directions_run,
+                        color: const Color(0xFF3B82F6),
+                        workoutCount: workoutProvider.getWorkoutsByDifficulty('Intermediate').length,
+                        onTap: () => context.push('${AppRoutes.training}/intermediate'),
+                      ),
+                      const SizedBox(height: 12),
+                      _ProgramCard(
+                        title: 'Advanced Programs',
+                        subtitle: 'Push your limits and achieve greatness',
+                        icon: Icons.flash_on,
+                        color: const Color(0xFFFF3B3B),
+                        workoutCount: workoutProvider.getWorkoutsByDifficulty('Advanced').length,
+                        onTap: () => context.push('${AppRoutes.training}/advanced'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -123,83 +234,158 @@ class _TrainingScreenState extends State<TrainingScreen> with SingleTickerProvid
   }
 }
 
-class _WorkoutList extends StatelessWidget {
-  final List<dynamic> workouts;
+class _QuickActionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Gradient gradient;
+  final VoidCallback onTap;
 
-  const _WorkoutList(this.workouts);
+  const _QuickActionCard({
+    required this.title,
+    required this.icon,
+    required this.gradient,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    if (workouts.isEmpty) {
-      return const Center(
-        child: Text(
-          'No workouts available',
-          style: TextStyle(color: AppColors.textGray),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(24),
-      itemCount: workouts.length,
-      itemBuilder: (context, index) {
-        final workout = workouts[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundCard,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  workout.name,
-                  style: const TextStyle(
-                    color: AppColors.textWhite,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.timer, color: AppColors.textGray, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${workout.durationMinutes} min',
-                      style: const TextStyle(color: AppColors.textGray, fontSize: 12),
-                    ),
-                    const SizedBox(width: 16),
-                    const Icon(Icons.fitness_center, color: AppColors.textGray, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${workout.exercises.length} exercises',
-                      style: const TextStyle(color: AppColors.textGray, fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.push('${AppRoutes.workoutDetail}?workoutId=${workout.id}');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryRed,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text('START WORKOUT'),
-                  ),
-                ),
-              ],
-            ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-        );
-      },
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 48,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
+
+class _ProgramCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color color;
+  final int workoutCount;
+  final VoidCallback onTap;
+
+  const _ProgramCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.workoutCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$workoutCount workouts available',
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: color,
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+

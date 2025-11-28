@@ -42,42 +42,93 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
         child: SafeArea(
           child: Column(
             children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'YOUR',
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: AppColors.textWhite,
-                            fontSize: 32,
-                            letterSpacing: 2,
+              // Header with background image
+              Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/progress_tab_background.png'),
+                    fit: BoxFit.cover,
+                  ),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.3),
+                      Colors.black.withOpacity(0.6),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(24),
+                    bottomRight: Radius.circular(24),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'YOUR ',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'BebasNeue',
+                              letterSpacing: 2,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.8),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'PROGRESS',
-                          style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: AppColors.primaryRed,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
+                          Text(
+                            'PROGRESS',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'BebasNeue',
+                              letterSpacing: 2,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.8),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 2),
+                                ),
+                                Shadow(
+                                  color: AppColors.primaryRed.withOpacity(0.5),
+                                  blurRadius: 30,
+                                  offset: const Offset(0, 0),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Track your fitness journey',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textGray,
+                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        'Track your fitness journey',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.8),
+                              blurRadius: 10,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -137,73 +188,50 @@ class _ProgressScreenState extends State<ProgressScreen> with SingleTickerProvid
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Body Measurements Button
-          ElevatedButton.icon(
-            onPressed: () {
-              context.push('/body-measurements');
-            },
-            icon: const Icon(Icons.monitor_weight),
-            label: const Text('Body Measurements & Goals'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryRed,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          // Quick Access Grid
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.3,
+            children: [
+              _ProgressCard(
+                title: 'Body\nMeasurements',
+                icon: Icons.monitor_weight,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF3B3B), Color(0xFFFF6B6B)],
+                ),
+                onTap: () => context.push('/body-measurements'),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Personal Records Button
-          ElevatedButton.icon(
-            onPressed: () {
-              context.push('/personal-records');
-            },
-            icon: const Icon(Icons.emoji_events),
-            label: const Text('Personal Records'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              _ProgressCard(
+                title: 'Personal\nRecords',
+                icon: Icons.emoji_events,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFEA580C), Color(0xFFFB923C)],
+                ),
+                onTap: () => context.push('/personal-records'),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Progress Photos Button
-          ElevatedButton.icon(
-            onPressed: () {
-              context.push('/progress-photos');
-            },
-            icon: const Icon(Icons.photo_library),
-            label: const Text('Progress Photos'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              _ProgressCard(
+                title: 'Progress\nPhotos',
+                icon: Icons.photo_library,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF9333EA), Color(0xFFC084FC)],
+                ),
+                onTap: () => context.push('/progress-photos'),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Progress Reports Button
-          ElevatedButton.icon(
-            onPressed: () {
-              context.push('/progress-reports');
-            },
-            icon: const Icon(Icons.assessment),
-            label: const Text('Progress Reports'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              _ProgressCard(
+                title: 'Progress\nReports',
+                icon: Icons.assessment,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3B82F6), Color(0xFF60A5FA)],
+                ),
+                onTap: () => context.push('/progress-reports'),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
           // Main Stats Cards
           Row(
@@ -1063,3 +1091,67 @@ class Achievement {
     required this.color,
   });
 }
+
+class _ProgressCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Gradient gradient;
+  final VoidCallback onTap;
+
+  const _ProgressCard({
+    required this.title,
+    required this.icon,
+    required this.gradient,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 40,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
