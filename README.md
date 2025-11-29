@@ -2,7 +2,7 @@
 
 A comprehensive mobile workout application built with Flutter that helps users stay accountable with their fitness journey.
 
-## 🎯 Features (Phase 1 - MVP)
+ Features (Phase 1 - MVP)
 
 ### ✅ Completed
 - **Splash Screen** - Branded welcome screen with MUSCLEMAX logo
